@@ -260,8 +260,7 @@ class GriddedTsBase(object):
         filename = os.path.join(self.path, self.cell_format.format(cell))
 
         if self.previous_cell != cell:
-            if self.fid is not None:
-                self.close()
+            self.close()
             self.previous_cell = cell
             self.fid = self.ioclass(filename, mode=self.mode)
 
@@ -435,10 +434,13 @@ class GriddedTsBase(object):
         """
         Flush data.
         """
-        self.fid.flush()
+        if self.fid is not None:
+            self.fid.flush()
 
     def close(self):
         """
         Close file.
         """
-        self.fid.close()
+        if self.fid is not None:
+            self.fid.close()
+            self.fid = None
