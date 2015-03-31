@@ -347,7 +347,7 @@ class GriddedTsBase(object):
 
         lon, lat = self.grid.gpi2lonlat(gpi)
 
-        self.fid.write(gpi, data, lon=lon, lat=lat, **kwargs)
+        self.fid.write_ts(gpi, data, lon=lon, lat=lat, **kwargs)
 
     def write_ts(self, *args, **kwargs):
         """
@@ -382,7 +382,7 @@ class GriddedTsBase(object):
         if self.mode in ['w', 'a']:
             raise IOError("File is not open in read mode")
 
-        return self.fid.read(gpi, **kwargs)
+        return self.fid.read_ts(gpi, **kwargs)
 
     def read_ts(self, *args, **kwargs):
         """
