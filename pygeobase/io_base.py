@@ -44,13 +44,16 @@ class GriddedStaticBase(object):
     object to read/write a dataset under the given path.
     """
 
-    def __init__(self, ioclass, path, grid, mode='r', cell_format='{:04d}'):
+    def __init__(self, path, grid, ioclass, mode='r', cell_format='{:04d}',
+                 fn_prefix='', fn_postfix=''):
 
-        self.ioclass = ioclass
         self.path = path
         self.grid = grid
+        self.ioclass = ioclass
         self.mode = mode
         self.cell_format = cell_format
+        self.fn_prefix = fn_prefix
+        self.fn_postfix = fn_postfix
         self.previous_cell = None
         self.fid = None
 
@@ -90,7 +93,10 @@ class GriddedStaticBase(object):
             Grid point index.
         """
         cell = self.grid.gpi2cell(gpi)
-        filename = os.path.join(self.path, self.cell_format.format(cell))
+
+        fn = ''.join((self.fn_prefix, self.cell_format.format(cell),
+                      self.fn_postfix))
+        filename = os.path.join(self.path, fn)
 
         if self.previous_cell != cell:
 
@@ -198,12 +204,12 @@ class GriddedTsBase(object):
 
     Parameters
     ----------
-    ioclass : IO class
-        IO class
     path : string
         Path to dataset.
     grid : pytesmo.grid.grids.BasicGrid of CellGrid instance
         Grid on which the time series data is stored.
+    ioclass : class
+        IO class
     mode : str, optional
         File mode and can be read 'r', write 'w' or append 'a'. Default: 'r'
     cell_format : str, optional
@@ -211,13 +217,16 @@ class GriddedTsBase(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, ioclass, path, grid, mode='r', cell_format='{:04d}'):
+    def __init__(self, path, grid, ioclass, mode='r', cell_format='{:04d}',
+                 fn_prefix='', fn_postfix=''):
 
-        self.ioclass = ioclass
         self.path = path
         self.grid = grid
+        self.ioclass = ioclass
         self.mode = mode
         self.cell_format = cell_format
+        self.fn_prefix = fn_prefix
+        self.fn_postfix = fn_postfix
         self.previous_cell = None
         self.fid = None
 
@@ -257,7 +266,9 @@ class GriddedTsBase(object):
             Grid point index.
         """
         cell = self.grid.gpi2cell(gpi)
-        filename = os.path.join(self.path, self.cell_format.format(cell))
+        fn = ''.join((self.fn_prefix, self.cell_format.format(cell),
+                      self.fn_postfix))
+        filename = os.path.join(self.path, fn)
 
         if self.previous_cell != cell:
             self.close()
