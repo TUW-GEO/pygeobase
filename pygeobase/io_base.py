@@ -44,16 +44,13 @@ class GriddedStaticBase(object):
     object to read/write a dataset under the given path.
     """
 
-    def __init__(self, path, grid, ioclass, mode='r', cell_format='{:04d}',
-                 fn_prefix='', fn_postfix=''):
+    def __init__(self, path, grid, ioclass, mode='r', fn_format='{:04d}'):
 
         self.path = path
         self.grid = grid
         self.ioclass = ioclass
         self.mode = mode
-        self.cell_format = cell_format
-        self.fn_prefix = fn_prefix
-        self.fn_postfix = fn_postfix
+        self.fn_format = fn_format
         self.previous_cell = None
         self.fid = None
 
@@ -93,10 +90,7 @@ class GriddedStaticBase(object):
             Grid point index.
         """
         cell = self.grid.gpi2cell(gpi)
-
-        fn = ''.join((self.fn_prefix, self.cell_format.format(cell),
-                      self.fn_postfix))
-        filename = os.path.join(self.path, fn)
+        filename = os.path.join(self.path, self.fn_format.format(cell))
 
         if self.previous_cell != cell:
 
@@ -217,16 +211,13 @@ class GriddedTsBase(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, path, grid, ioclass, mode='r', cell_format='{:04d}',
-                 fn_prefix='', fn_postfix=''):
+    def __init__(self, path, grid, ioclass, mode='r', fn_format='{:04d}'):
 
         self.path = path
         self.grid = grid
         self.ioclass = ioclass
         self.mode = mode
-        self.cell_format = cell_format
-        self.fn_prefix = fn_prefix
-        self.fn_postfix = fn_postfix
+        self.fn_format = fn_format
         self.previous_cell = None
         self.fid = None
 
@@ -266,9 +257,7 @@ class GriddedTsBase(object):
             Grid point index.
         """
         cell = self.grid.gpi2cell(gpi)
-        fn = ''.join((self.fn_prefix, self.cell_format.format(cell),
-                      self.fn_postfix))
-        filename = os.path.join(self.path, fn)
+        filename = os.path.join(self.path, self.fn_format.format(cell))
 
         if self.previous_cell != cell:
             self.close()
@@ -422,16 +411,16 @@ class GriddedTsBase(object):
             Set to lon/lat bounding box to yield only points in that area.
             Default: None
 
-        Returns
-        -------
+        Yields
+        ------
         data : pandas.DataFrame
             pandas.DateFrame with DateTimeIndex
         """
         if cell is None and ll_bbox is None:
-            gps, _, _, _ = self.grid.grid_points()
+            gps = self.grid.get_grid_points()[0]
 
         if cell is not None:
-            gps, _, _ = self.grid.grid_points_for_cell(cell)
+            gps = self.grid.grid_points_for_cell(cell)[0]
 
         if ll_bbox is not None:
             latmin, latmax, lonmin, lonmax = ll_bbox
@@ -439,7 +428,7 @@ class GriddedTsBase(object):
                 latmin, latmax, lonmin, lonmax)
 
         for gp in gps:
-            yield self.read_gp(gp)
+            yield self.read_gp(gp), gp
 
     def flush(self):
         """
