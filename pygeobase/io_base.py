@@ -398,34 +398,18 @@ class GriddedTsBase(object):
 
         return data
 
-    def iter_ts(self, cell=None, ll_bbox=None):
+    def iter_ts(self):
         """
-        Yield all time series for all grid points, for grid points in a cell
-        or for grid points in a given lon/lat bound box (ll_bbox).
-
-        Parameters
-        ----------
-        cell : int, optional
-            Cell number. Default: None
-        ll_bbox : tuple of floats (latmin, latmax, lonmin, lonmax), optional
-            Set to lon/lat bounding box to yield only points in that area.
-            Default: None
+        Yield time series for all grid points.
 
         Yields
         ------
         data : pandas.DataFrame
             pandas.DateFrame with DateTimeIndex
+        gpi : int
+            Grid point index
         """
-        if cell is None and ll_bbox is None:
-            gps = self.grid.get_grid_points()[0]
-
-        if cell is not None:
-            gps = self.grid.grid_points_for_cell(cell)[0]
-
-        if ll_bbox is not None:
-            latmin, latmax, lonmin, lonmax = ll_bbox
-            gps = self.grid.get_bbox_grid_points(
-                latmin, latmax, lonmin, lonmax)
+        gps = self.grid.get_grid_points()[0]
 
         for gp in gps:
             yield self.read_gp(gp), gp
