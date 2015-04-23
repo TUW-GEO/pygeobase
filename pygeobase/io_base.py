@@ -37,6 +37,10 @@ class TsBase(object):
     pass
 
 
+class ImageBase(object):
+    pass
+
+
 class GriddedStaticBase(object):
 
     """
