@@ -27,6 +27,7 @@
 
 import os
 import abc
+import numpy as np
 
 
 class StaticBase(object):
@@ -97,7 +98,6 @@ class GriddedStaticBase(object):
         filename = os.path.join(self.path, self.fn_format.format(cell))
 
         if self.previous_cell != cell:
-
             if self.fid is not None:
                 self.close()
 
@@ -154,6 +154,22 @@ class GriddedStaticBase(object):
         self._open(gpi)
 
         return self.fid.read(gpi)
+
+    def iter_gp(self):
+        """
+        Yield all values for all grid points.
+
+        Yields
+        ------
+        data : pandas.DataFrame
+            pandas.DateFrame with DateTimeIndex
+        """
+
+        gpi_info = list(self.grid.grid_points())
+        gps = np.array(gpi_info, dtype=np.int)[:, 0]
+
+        for gp in gps:
+            yield self.read_gp(gp), gp
 
     def write(self, data):
         """
