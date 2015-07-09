@@ -201,13 +201,15 @@ class GriddedStaticBase(object):
         """
         Flush data.
         """
-        self.fid.flush()
+        if self.fid is not None:
+            self.fid.flush()
 
     def close(self):
         """
         Close file.
         """
-        self.fid.close()
+        if self.fid is not None:
+            self.fid.close()
 
 
 class GriddedTsBase(object):
