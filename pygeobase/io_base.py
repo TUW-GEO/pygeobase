@@ -437,22 +437,6 @@ class GriddedTsBase(object):
         for gp in gps:
             yield self.read_gp(gp), gp
 
-    def iter_gp(self):
-        """
-        Yield all values for all grid points.
-
-        Yields
-        ------
-        data : pandas.DataFrame
-            pandas.DateFrame with DateTimeIndex
-        """
-
-        gpi_info = list(self.grid.grid_points())
-        gps = np.array(gpi_info, dtype=np.int)[:, 0]
-
-        for gp in gps:
-            yield self.read_gp(gp), gp
-
     def flush(self):
         """
         Flush data.
