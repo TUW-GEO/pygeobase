@@ -431,7 +431,8 @@ class GriddedTsBase(object):
         gpi : int
             Grid point index
         """
-        gps = self.grid.get_grid_points()[0]
+        gpi_info = list(self.grid.grid_points())
+        gps = np.array(gpi_info, dtype=np.int)[:, 0]
 
         for gp in gps:
             yield self.read_gp(gp), gp
