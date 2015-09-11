@@ -47,9 +47,26 @@ class GriddedStaticBase(object):
     """
     The GriddedStaticBase class uses another IO class together with a grid
     object to read/write a dataset under the given path.
-    """
 
-    def __init__(self, path, grid, ioclass, mode='r', fn_format='{:04d}'):
+    Parameters
+    ----------
+    path : string
+        Path to dataset.
+    grid : pytesmo.grid.grids.BasicGrid of CellGrid instance
+        Grid on which the time series data is stored.
+    ioclass : class
+        IO class.
+    mode : str, optional
+        File mode and can be read 'r', write 'w' or append 'a'. Default: 'r'
+    fn_format : str, optional
+        The string format of the cell files. Default: '{:04d}'
+    ioclass_kws : dict
+        Additional keyword arguments for the ioclass.
+    """
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, path, grid, ioclass, mode='r', fn_format='{:04d}',
+                 ioclass_kws=None):
 
         self.path = path
         self.grid = grid
@@ -58,6 +75,11 @@ class GriddedStaticBase(object):
         self.fn_format = fn_format
         self.previous_cell = None
         self.fid = None
+
+        if ioclass_kws is None:
+            self.ioclass_kws = {}
+        else:
+            self.ioclass_kws = ioclass_kws
 
     def __enter__(self):
         """
@@ -102,7 +124,8 @@ class GriddedStaticBase(object):
                 self.close()
 
             self.previous_cell = cell
-            self.fid = self.ioclass(filename, mode=self.mode)
+            self.fid = self.ioclass(filename, mode=self.mode,
+                                    **self.ioclass_kws)
 
     def read(self, *args, **kwargs):
         """
@@ -225,15 +248,18 @@ class GriddedTsBase(object):
     grid : pytesmo.grid.grids.BasicGrid of CellGrid instance
         Grid on which the time series data is stored.
     ioclass : class
-        IO class
+        IO class.
     mode : str, optional
         File mode and can be read 'r', write 'w' or append 'a'. Default: 'r'
-    cell_format : str, optional
+    fn_format : str, optional
         The string format of the cell files. Default: '{:04d}'
+    ioclass_kws : dict
+        Additional keyword arguments for the ioclass.
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, path, grid, ioclass, mode='r', fn_format='{:04d}'):
+    def __init__(self, path, grid, ioclass, mode='r', fn_format='{:04d}',
+                 ioclass_kws=None):
 
         self.path = path
         self.grid = grid
@@ -242,6 +268,11 @@ class GriddedTsBase(object):
         self.fn_format = fn_format
         self.previous_cell = None
         self.fid = None
+
+        if ioclass_kws is None:
+            self.ioclass_kws = {}
+        else:
+            self.ioclass_kws = ioclass_kws
 
     def __enter__(self):
         """
@@ -284,7 +315,8 @@ class GriddedTsBase(object):
         if self.previous_cell != cell:
             self.close()
             self.previous_cell = cell
-            self.fid = self.ioclass(filename, mode=self.mode)
+            self.fid = self.ioclass(filename, mode=self.mode,
+                                    **self.ioclass_kws)
 
     def _read_lonlat(self, lon, lat, **kwargs):
         """
