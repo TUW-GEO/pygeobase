@@ -123,9 +123,9 @@ class GriddedStaticBase(object):
             if self.fid is not None:
                 self.close()
 
-            self.previous_cell = cell
             self.fid = self.ioclass(filename, mode=self.mode,
                                     **self.ioclass_kws)
+            self.previous_cell = cell
 
     def read(self, *args, **kwargs):
         """
@@ -314,9 +314,9 @@ class GriddedTsBase(object):
 
         if self.previous_cell != cell:
             self.close()
-            self.previous_cell = cell
             self.fid = self.ioclass(filename, mode=self.mode,
                                     **self.ioclass_kws)
+            self.previous_cell = cell
 
     def _read_lonlat(self, lon, lat, **kwargs):
         """
