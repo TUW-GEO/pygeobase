@@ -31,7 +31,70 @@ import numpy as np
 
 
 class StaticBase(object):
-    pass
+
+    """
+    The StaticBase class serves as a template for i/o objects used in
+    GriddedStaticBase.
+    """
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, filename, mode='r', **kwargs):
+        """
+        Initialization of i/o object.
+
+        Parameters
+        ----------
+        filename : str
+            File name.
+        mode : str, optional
+            Opening mode. Default: r           
+        """
+        self.filename = filename
+        self.mode = mode
+        self.kwargs = kwargs
+
+    @abc.abstractmethod
+    def read(self, gpi):
+        """
+        Read data for given grid point.
+
+        Parameters
+        ----------
+        gpi : int
+            Grid point index.
+
+        Returns
+        -------
+        data : numpy.ndarray
+            Data set.
+        """
+        return
+
+    @abc.abstractmethod
+    def write(self, data):
+        """
+        Write data.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Data records.
+        """
+        return
+
+    @abc.abstractmethod
+    def flush(self):
+        """
+        Flush data.
+        """
+        return
+
+    @abc.abstractmethod
+    def close(self):
+        """
+        Close file.
+        """
+        return
 
 
 class TsBase(object):
@@ -237,7 +300,7 @@ class GriddedStaticBase(object):
         Returns
         -------
         data : numpy.ndarray
-            Time series data.
+            Data set.
         """
         self._open(gpi)
 
@@ -252,7 +315,6 @@ class GriddedStaticBase(object):
         data : pandas.DataFrame
             pandas.DateFrame with DateTimeIndex
         """
-
         gpi_info = list(self.grid.grid_points())
         gps = np.array(gpi_info, dtype=np.int)[:, 0]
 
