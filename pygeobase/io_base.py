@@ -577,7 +577,7 @@ class GriddedTsBase(object):
 
         self.fid.write_ts(gpi, data, lon=lon, lat=lat, **kwargs)
 
-        if self._write_bulk:
+        if not self._write_bulk:
             self.flush()
             self.close()
 
