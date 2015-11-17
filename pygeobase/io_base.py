@@ -27,6 +27,7 @@
 
 import os
 import abc
+
 import numpy as np
 
 
@@ -386,7 +387,7 @@ class GriddedTsBase(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, path, grid, ioclass, mode='r', fn_format='{:04d}',
-                 ioclass_kws=None):
+                 read_bulk=False, write_bulk=False, ioclass_kws=None):
 
         self.path = path
         self.grid = grid
@@ -395,6 +396,9 @@ class GriddedTsBase(object):
         self.fn_format = fn_format
         self.previous_cell = None
         self.fid = None
+        self.first_write = True
+        self._read_bulk = read_bulk
+        self._write_bulk = write_bulk
 
         if ioclass_kws is None:
             self.ioclass_kws = {}
@@ -439,11 +443,55 @@ class GriddedTsBase(object):
         cell = self.grid.gpi2cell(gpi)
         filename = os.path.join(self.path, self.fn_format.format(cell))
 
-        if self.previous_cell != cell:
-            self.close()
+        if self.mode == 'r':
+            if self._read_bulk:
+                if self.previous_cell != cell:
+                    self.close()
+                    self.previous_cell = cell
+                    self.fid = self.ioclass(filename, mode=self.mode,
+                                            **self.ioclass_kws)
+            else:
+                self.close()
+                self.fid = self.ioclass(filename, mode=self.mode,
+                                        **self.ioclass_kws)
+
+        if self.mode in ['w', 'a']:
+            if self._write_bulk:
+                if self.previous_cell != cell:
+                    self.flush()
+                    self.close()
+                    self.previous_cell = cell
+                    self.__open_write(filename, cell)
+            else:
+                self.flush()
+                self.close()
+                self.__open_write(filename, cell)
+
+    def __open_write(self, filename, cell):
+        """
+        The function checks if the file already exists, in order to
+        open the file in append mode for further write calls.
+
+        Parameters
+        ----------
+        filename : str
+            File name.
+        cell : int
+            Cell number.
+        """
+        if os.path.exists(filename):
+            if self.first_write and self.mode == 'w':
+                self.fid = self.ioclass(filename, mode=self.mode,
+                                        **self.ioclass_kws)
+                self.first_write = False
+            else:
+                # open in append mode after first write
+                self.fid = self.ioclass(filename, mode='a',
+                                        **self.ioclass_kws)
+        else:
             self.fid = self.ioclass(filename, mode=self.mode,
                                     **self.ioclass_kws)
-            self.previous_cell = cell
+            self.first_write = False
 
     def _read_lonlat(self, lon, lat, **kwargs):
         """
@@ -520,14 +568,18 @@ class GriddedTsBase(object):
         data : numpy.ndarray
             Data records.
         """
-        self._open(gpi)
-
         if self.mode in ['r']:
             raise IOError("File is not open in write/append mode")
+
+        self._open(gpi)
 
         lon, lat = self.grid.gpi2lonlat(gpi)
 
         self.fid.write_ts(gpi, data, lon=lon, lat=lat, **kwargs)
+
+        if not self._write_bulk:
+            self.flush()
+            self.close()
 
     def write_ts(self, *args, **kwargs):
         """
@@ -557,10 +609,10 @@ class GriddedTsBase(object):
         data : pandas.DataFrame
             pandas.DateFrame with DateTimeIndex
         """
-        self._open(gpi)
-
         if self.mode in ['w', 'a']:
             raise IOError("File is not open in read mode")
+
+        self._open(gpi)
 
         return self.fid.read_ts(gpi, **kwargs)
 
