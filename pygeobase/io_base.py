@@ -27,6 +27,7 @@
 
 import os
 import abc
+import glob
 import numpy as np
 
 
@@ -167,6 +168,7 @@ class TsBase(object):
 
 
 class ImageBase(object):
+
     """
     ImageBase class serves as a template for i/o objects used for reading
     and writing image data.
@@ -674,3 +676,359 @@ class GriddedTsBase(object):
         if self.fid is not None:
             self.fid.close()
             self.fid = None
+
+
+class SequentialImageBase(object):
+
+    """
+    The SequentialImageBase class make use of an ImageBase object to
+    read/write a sequence of images under a given path.
+
+    Parameters
+    ----------
+    path : string
+        Path to dataset.
+    ioclass : class
+        IO class.
+    mode : str, optional
+        File mode and can be read 'r', write 'w' or append 'a'. Default: 'r'
+    fn_format : str, optional
+        The string format of the cell files. Default: '{:04d}'
+    ioclass_kws : dict
+        Additional keyword arguments for the ioclass.
+    """
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, path, ioclass, mode='r', fname_templ=None,
+                 ioclass_kws=None, exact_templ=True):
+
+        self.path = path
+        self.ioclass = ioclass
+        self.mode = mode
+        self.fname_templ = fname_templ
+        self.exact_templ = exact_templ
+        self.fid = None
+
+        if ioclass_kws is None:
+            self.ioclass_kws = {}
+        else:
+            self.ioclass_kws = ioclass_kws
+
+    def __enter__(self):
+        """
+        Context manager initialization.
+
+        Returns
+        -------
+        self : GriddedBaseTs object
+            self
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """
+        Exit the runtime context related to this object. The file will be
+        closed. The parameters describe the exception that caused the
+        context to be exited.
+
+        exc_type :
+
+        exc_value :
+
+        traceback :
+
+        """
+        self.close()
+
+    def flush(self):
+        """
+        Flush data.
+        """
+        if self.fid is not None:
+            self.fid.flush()
+
+    def close(self):
+        """
+        Close file.
+        """
+        if self.fid is not None:
+            self.fid.close()
+            self.fid = None
+
+    @abc.abstractmethod
+    def _read_spec_file(self, filename, timestamp=None, **kwargs):
+        """
+        Read specific image for given filename
+
+        Parameters
+        ----------
+        filename : string
+            filename
+        timestamp : datetime, optional
+           can be given here if it is already
+           known since it has to be returned.
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold the metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        time : numpy.array or None
+            observation times of the data as numpy array of julian dates,
+            if None all observations have the same timestamp
+        """
+        return
+
+    def _search_files(self, timestamp, custom_templ=None,
+                      str_param=None):
+        """
+        searches for filenames for the given timestamp. This function is
+        used by _build_filename which then checks if a unique filename was
+        found.
+
+        Parameters
+        ----------
+        timestamp: datetime
+            datetime for given filename
+        custom_tmpl : string, optional
+            if given not the fname_templ is used but the custom_templ. This
+            is convenient for some datasets where not all filenames follow
+            the same convention and where the read_img function can choose
+            between templates based on some condition.
+        str_param : dict, optional
+            if given then this dict will be applied to the template using
+            the fname_template.format(**str_param) notation before the resulting
+            string is put into datetime.strftime.
+
+            example from python documentation
+            >>> coord = {'latitude': '37.24N', 'longitude': '-115.81W'}
+            >>> 'Coordinates: {latitude}, {longitude}'.format(**coord)
+            'Coordinates: 37.24N, -115.81W'
+        """
+        if custom_templ is not None:
+            fname_templ = custom_templ
+        else:
+            fname_templ = self.fname_templ
+
+        if str_param is not None:
+            fname_templ = fname_templ.format(**str_param)
+
+        search_file = os.path.join(self.path, timestamp.strftime(fname_templ))
+
+        if self.exact_templ:
+            return [search_file]
+        else:
+            filename = glob.glob(search_file)
+
+        if not filename:
+            raise IOError("File not found {:}".format(search_file))
+
+        return filename
+
+    def _build_filename(self, timestamp, custom_templ=None,
+                        str_param=None):
+        """
+        This function uses _search_files to find the correct
+        filename and checks if the search was unambiguous
+
+        Parameters
+        ----------
+        timestamp: datetime
+            datetime for given filename
+        custom_tmpl : string, optional
+            if given not the fname_templ is used but the custom templ
+            This is convenient for some datasets where no all filenames
+            follow the same convention and where the read_img function
+            can choose between templates based on some condition.
+        str_param : dict, optional
+            if given then this dict will be applied to the template using
+            the fname_template.format(**str_param) notation before the resulting
+            string is put into datetime.strftime.
+
+            example from python documentation
+
+            >>> coord = {'latitude': '37.24N', 'longitude': '-115.81W'}
+            >>> 'Coordinates: {latitude}, {longitude}'.format(**coord)
+            'Coordinates: 37.24N, -115.81W'
+        """
+        filename = self._search_files(timestamp, custom_templ=custom_templ,
+                                      str_param=str_param)
+
+        if len(filename) > 1:
+            raise IOError(
+                "File search is ambiguous {:}".format(filename))
+
+        return filename[0]
+
+    def _assemble_img(self, timestamp, **kwargs):
+        """
+        Function between read_img and _build_filename that can
+        be used to read a different file for each parameter in a image
+        dataset. In the standard implementation it is assumed
+        that all necessary information of a image is stored in the
+        one file whose filename is built by the _build_filname function.
+
+        Parameters
+        ----------
+        timestamp : datatime
+            timestamp of the image to assemble
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold the metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        time_var : string or None
+            variable name of observation times in the data dict, if None all
+            observations have the same timestamp
+        """
+        return self._read_spec_file(self._build_filename(timestamp),
+                                    timestamp=timestamp, **kwargs)
+
+    def read_image(self, timestamp, **kwargs):
+        """
+        Return an image for a specific timestamp.
+
+        Parameters
+        ----------
+        timestamp : datetime.datetime
+            Time stamp.
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold the metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        time_var : string or None
+            variable name of observation times in the data dict, if None all
+            observations have the same timestamp
+        """
+        return self._assemble_img(timestamp, **kwargs)
+
+    def write_image(self, timestamp, data, **kwargs):
+        """
+        Write data for given grid point.
+
+        Parameters
+        ----------
+         timestamp : datetime.datetime
+            exact timestamp of the image
+        data : numpy.ndarray
+            Data records.
+        """
+        if self.mode in ['r']:
+            raise IOError("File is not open in write/append mode")
+        filename = self._build_filename(timestamp)
+
+        self.fid.write_ts(filename, data, **kwargs)
+
+    def tstamps_for_daterange(self, start_date, end_date):
+        """
+        Return all valid timestamps in a given date range.
+        This method must be implemented if iteration over
+        images should be possible.
+
+        Parameters
+        ----------
+        start_date : datetime.date or datetime.datetime
+            start date
+        end_date : datetime.date or datetime.datetime
+            end date
+
+        Returns
+        -------
+        dates : list
+            list of datetimes
+        """
+
+        raise NotImplementedError(
+            "Please implement to enable iteration over date ranges.")
+
+    def iter_images(self, start_date, end_date, **kwargs):
+        """
+        Yield all images for a given date range.
+
+        Parameters
+        ----------
+        start_date : datetime.date or datetime.datetime
+            start date
+        end_date : datetime.date or datetime.datetime
+            end date
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold the metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        time_var : string or None
+            variable name of observation times in the data dict, if None all
+            observations have the same timestamp
+        """
+        timestamps = self.tstamps_for_daterange(start_date, end_date)
+
+        if timestamps:
+            for timestamp in timestamps:
+                yield_img = self.read_img(timestamp, **kwargs)
+                yield yield_img
+        else:
+            raise IOError("no files found for given date range")
+
+    def daily_images(self, day, **kwargs):
+        """
+        Yield all images for a day.
+
+        Parameters
+        ----------
+        day : datetime.date
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        jd : string or None
+            name of the field in the data array representing the observation
+            dates
+        """
+        for img in self.iter_images(day, day, **kwargs):
+            yield img
