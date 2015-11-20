@@ -167,7 +167,71 @@ class TsBase(object):
 
 
 class ImageBase(object):
-    pass
+    """
+    ImageBase class serves as a template for i/o objects used for reading
+    and writing image data.
+    """
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, filename, mode='r', **kwargs):
+        """
+        Initialization of i/o object.
+
+        Parameters
+        ----------
+        filename : str
+            File name.
+        mode : str, optional
+            Opening mode. Default: r
+        """
+        self.filename = filename
+        self.mode = mode
+        self.kwargs = kwargs
+
+    @abc.abstractmethod
+    def read_img(self, filename, **kwargs):
+        """
+        Read data of an image file.
+
+        Parameters
+        ----------
+        filename : str
+            File name.
+
+        Returns
+        -------
+        data : numpy.ndarray
+            Data set.
+        """
+        return
+
+    @abc.abstractmethod
+    def write_img(self, filename, data, **kwargs):
+        """
+        Write data to an image file.
+
+        Parameters
+        ----------
+        filename : str
+            File name.
+        data : numpy.ndarray
+            Data records.
+        """
+        return
+
+    @abc.abstractmethod
+    def flush(self):
+        """
+        Flush data.
+        """
+        return
+
+    @abc.abstractmethod
+    def close(self):
+        """
+        Close file.
+        """
+        return
 
 
 class GriddedStaticBase(object):
