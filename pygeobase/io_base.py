@@ -678,11 +678,11 @@ class GriddedTsBase(object):
             self.fid = None
 
 
-class SequentialImageBase(object):
+class MultiTemporalImageBase(object):
 
     """
-    The SequentialImageBase class make use of an ImageBase object to
-    read/write a sequence of images under a given path.
+    The MultiTemporalImageBase class make use of an ImageBase object to
+    read/write a sequence of multi temporal images under a given path.
 
     Parameters
     ----------
@@ -700,12 +700,13 @@ class SequentialImageBase(object):
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, path, ioclass, mode='r', fname_templ=None,
-                 ioclass_kws=None, exact_templ=True):
+                 sub_path=None, ioclass_kws=None, exact_templ=True):
 
         self.path = path
         self.ioclass = ioclass
         self.mode = mode
         self.fname_templ = fname_templ
+        self.sub_path = sub_path
         self.exact_templ = exact_templ
         self.fid = None
 
@@ -755,42 +756,10 @@ class SequentialImageBase(object):
             self.fid.close()
             self.fid = None
 
-    @abc.abstractmethod
-    def _read_spec_file(self, filename, timestamp=None, **kwargs):
-        """
-        Read specific image for given filename
-
-        Parameters
-        ----------
-        filename : string
-            filename
-        timestamp : datetime, optional
-           can be given here if it is already
-           known since it has to be returned.
-
-        Returns
-        -------
-        data : dict
-            dictionary of numpy arrays that hold the image data for each
-            variable of the dataset
-        metadata : dict
-            dictionary of numpy arrays that hold the metadata
-        timestamp : datetime.datetime
-            exact timestamp of the image
-        lon : numpy.array or None
-            array of longitudes, if None self.grid will be assumed
-        lat : numpy.array or None
-            array of latitudes, if None self.grid will be assumed
-        time : numpy.array or None
-            observation times of the data as numpy array of julian dates,
-            if None all observations have the same timestamp
-        """
-        return
-
     def _search_files(self, timestamp, custom_templ=None,
                       str_param=None):
         """
-        searches for filenames for the given timestamp. This function is
+        searches for filenames with the given timestamp. This function is
         used by _build_filename which then checks if a unique filename was
         found.
 
@@ -821,7 +790,12 @@ class SequentialImageBase(object):
         if str_param is not None:
             fname_templ = fname_templ.format(**str_param)
 
-        search_file = os.path.join(self.path, timestamp.strftime(fname_templ))
+        sub_path = ''
+        if self.sub_path is not None:
+            sub_path = timestamp.strftime(self.sub_path_templ)
+
+        search_file = os.path.join(self.path, sub_path,
+                                   timestamp.strftime(fname_templ))
 
         if self.exact_templ:
             return [search_file]
@@ -898,8 +872,8 @@ class SequentialImageBase(object):
             variable name of observation times in the data dict, if None all
             observations have the same timestamp
         """
-        return self._read_spec_file(self._build_filename(timestamp),
-                                    timestamp=timestamp, **kwargs)
+        return self.fid.read_img(self._build_filename(timestamp, **kwargs),
+                                 **kwargs)
 
     def read_image(self, timestamp, **kwargs):
         """
