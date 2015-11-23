@@ -47,7 +47,7 @@ class StaticBase(object):
         filename : str
             File name.
         mode : str, optional
-            Opening mode. Default: r
+            Opening mode. Default: r           
         """
         self.filename = filename
         self.mode = mode
@@ -82,12 +82,14 @@ class StaticBase(object):
         """
         return
 
+    @abc.abstractmethod
     def flush(self):
         """
         Flush data.
         """
         return
 
+    @abc.abstractmethod
     def close(self):
         """
         Close file.
@@ -112,7 +114,7 @@ class TsBase(object):
         filename : str
             File name.
         mode : str, optional
-            Opening mode. Default: r
+            Opening mode. Default: r           
         """
         self.filename = filename
         self.mode = mode
@@ -149,12 +151,14 @@ class TsBase(object):
         """
         return
 
+    @abc.abstractmethod
     def flush(self):
         """
         Flush data.
         """
         return
 
+    @abc.abstractmethod
     def close(self):
         """
         Close file.
@@ -166,17 +170,17 @@ class ImageBase(object):
     pass
 
 
-class GriddedBase(object):
+class GriddedStaticBase(object):
 
     """
-    The GriddedBase class uses another IO class together with a grid
+    The GriddedStaticBase class uses another IO class together with a grid
     object to read/write a dataset under the given path.
 
     Parameters
     ----------
     path : string
         Path to dataset.
-    grid : pygeogrids.BasicGrid of CellGrid instance
+    grid : pytesmo.grid.grids.BasicGrid of CellGrid instance
         Grid on which the time series data is stored.
     ioclass : class
         IO class.
@@ -184,10 +188,9 @@ class GriddedBase(object):
         File mode and can be read 'r', write 'w' or append 'a'. Default: 'r'
     fn_format : str, optional
         The string format of the cell files. Default: '{:04d}'
-    ioclass_kws : dict, optional
-        Additional keyword arguments for the ioclass. Default: None
+    ioclass_kws : dict
+        Additional keyword arguments for the ioclass.
     """
-
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, path, grid, ioclass, mode='r', fn_format='{:04d}',
@@ -200,7 +203,6 @@ class GriddedBase(object):
         self.fn_format = fn_format
         self.previous_cell = None
         self.fid = None
-        self._first_write = True
 
         if ioclass_kws is None:
             self.ioclass_kws = {}
@@ -233,38 +235,38 @@ class GriddedBase(object):
         """
         self.close()
 
-    def _open(self, gp):
+    def _open(self, gpi):
         """
         Open file.
 
         Parameters
         ----------
-        gp : int
-            Grid point.
+        gpi : int
+            Grid point index.
         """
-        cell = self.grid.gpi2cell(gp)
+        cell = self.grid.gpi2cell(gpi)
         filename = os.path.join(self.path, self.fn_format.format(cell))
 
-        if self.mode == 'r':
-            if self.previous_cell != cell:
+        if self.previous_cell != cell:
+            if self.fid is not None:
                 self.close()
-                self.previous_cell = cell
-                self.fid = self.ioclass(filename, mode=self.mode,
-                                        **self.ioclass_kws)
 
-        if self.mode in ['w', 'a']:
-            if self.previous_cell != cell:
-                self.flush()
-                self.close()
-                self.previous_cell = cell
-                if self._first_write and self.mode == 'w':
-                    self.fid = self.ioclass(filename, mode=self.mode,
-                                            **self.ioclass_kws)
-                    self._first_write = False
-                else:
-                    # open in append mode after first write
-                    self.fid = self.ioclass(filename, mode='a',
-                                            **self.ioclass_kws)
+            self.fid = self.ioclass(filename, mode=self.mode,
+                                    **self.ioclass_kws)
+            self.previous_cell = cell
+
+    def read(self, *args, **kwargs):
+        """
+        Takes either 1 or 2 arguments and calls the correct function
+        which is either reading the gpi directly or finding
+        the nearest gpi from given lat,lon coordinates and then reading it
+        """
+        if len(args) == 1:
+            data = self.read_gp(args[0], **kwargs)
+        if len(args) == 2:
+            data = self._read_lonlat(args[0], args[1], **kwargs)
+
+        return data
 
     def _read_lonlat(self, lon, lat, **kwargs):
         """
@@ -284,26 +286,184 @@ class GriddedBase(object):
         """
         gp, _ = self.grid.find_nearest_gpi(lon, lat)
 
-        return self._read_gp(gp, **kwargs)
+        return self.read_gp(gp, **kwargs)
 
-    @abc.abstractmethod
-    def _read_gp(self, gp, **kwargs):
-        return
-
-    def read(self, *args, **kwargs):
+    def read_gp(self, gpi):
         """
-        Takes either 1 or 2 arguments and calls the correct function
-        which is either reading the gpi directly or finding
-        the nearest gpi from given lat,lon coordinates and then reading it
-        """
-        if len(args) == 1:
-            data = self._read_gp(args[0], **kwargs)
-        if len(args) == 2:
-            data = self._read_lonlat(args[0], args[1], **kwargs)
-        if len(args) < 1 or len(args) > 2:
-            raise ValueError("Wrong number of arguments")
+        Read data for given grid point.
 
-        return data
+        Parameters
+        ----------
+        gpi : int
+            Grid point index.
+
+        Returns
+        -------
+        data : numpy.ndarray
+            Data set.
+        """
+        self._open(gpi)
+
+        return self.fid.read(gpi)
+
+    def iter_gp(self):
+        """
+        Yield all values for all grid points.
+
+        Yields
+        ------
+        data : pandas.DataFrame
+            pandas.DateFrame with DateTimeIndex
+        """
+        gpi_info = list(self.grid.grid_points())
+        gps = np.array(gpi_info, dtype=np.int)[:, 0]
+
+        for gp in gps:
+            yield self.read_gp(gp), gp
+
+    def write(self, data):
+        """
+        Write data.
+
+        Parameters
+        ----------
+        data : numpy.ndarray
+            Data records. A field 'gpi', indicating the grid point index
+            has to be included.
+        """
+        self.write_gp(data['gpi'], data)
+
+    def write_gp(self, gpi, data):
+        """
+        Write data for given grid point.
+
+        Parameters
+        ----------
+        gpi : int
+            Grid point index.
+        data : numpy.ndarray
+            Data
+        """
+        self._open(gpi)
+        self.fid.write(data)
+
+    def flush(self):
+        """
+        Flush data.
+        """
+        if self.fid is not None:
+            self.fid.flush()
+
+    def close(self):
+        """
+        Close file.
+        """
+        if self.fid is not None:
+            self.fid.close()
+
+
+class GriddedTsBase(object):
+
+    """
+    The GriddedTsBase class uses another IO class together with a grid object
+    to read/write a time series dataset under the given path.
+
+    Parameters
+    ----------
+    path : string
+        Path to dataset.
+    grid : pytesmo.grid.grids.BasicGrid of CellGrid instance
+        Grid on which the time series data is stored.
+    ioclass : class
+        IO class.
+    mode : str, optional
+        File mode and can be read 'r', write 'w' or append 'a'. Default: 'r'
+    fn_format : str, optional
+        The string format of the cell files. Default: '{:04d}'
+    ioclass_kws : dict
+        Additional keyword arguments for the ioclass.
+    """
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, path, grid, ioclass, mode='r', fn_format='{:04d}',
+                 ioclass_kws=None):
+
+        self.path = path
+        self.grid = grid
+        self.ioclass = ioclass
+        self.mode = mode
+        self.fn_format = fn_format
+        self.previous_cell = None
+        self.fid = None
+
+        if ioclass_kws is None:
+            self.ioclass_kws = {}
+        else:
+            self.ioclass_kws = ioclass_kws
+
+    def __enter__(self):
+        """
+        Context manager initialization.
+
+        Returns
+        -------
+        self : GriddedBaseTs object
+            self
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """
+        Exit the runtime context related to this object. The file will be
+        closed. The parameters describe the exception that caused the
+        context to be exited.
+
+        exc_type :
+
+        exc_value :
+
+        traceback :
+
+        """
+        self.close()
+
+    def _open(self, gpi):
+        """
+        Open file.
+
+        Parameters
+        ----------
+        gpi : int
+            Grid point index.
+        """
+        cell = self.grid.gpi2cell(gpi)
+        filename = os.path.join(self.path, self.fn_format.format(cell))
+
+        if self.previous_cell != cell:
+            self.close()
+            self.fid = self.ioclass(filename, mode=self.mode,
+                                    **self.ioclass_kws)
+            self.previous_cell = cell
+
+    def _read_lonlat(self, lon, lat, **kwargs):
+        """
+        Reading time series for given longitude and latitude coordinate.
+
+        Parameters
+        ----------
+        lon : float
+            Longitude coordinate.
+        lat : float
+            Latitude coordinate.
+
+        Returns
+        -------
+        data : pandas.DataFrame
+            pandas.DateFrame with DateTimeIndex.
+        """
+        gp, _ = self.grid.find_nearest_gpi(lon, lat)
+
+        return self.read_gp(gp, **kwargs)
 
     def _write_lonlat(self, lon, lat, data, **kwargs):
         """
@@ -320,46 +480,121 @@ class GriddedBase(object):
         """
         gp, _ = self.grid.find_nearest_gpi(lon, lat)
 
-        return self._write_gp(gp, data, **kwargs)
+        return self.write_gp(gp, **kwargs)
 
-    def write(self, *args, **kwargs):
+    def get_nearest_gp_info(self, lon, lat):
+        """
+        get info for nearest grid point
+
+        Parameters
+        ----------
+        lon : float
+            Longitude coordinate.
+        lat : float
+            Latitude coordinate.
+
+        Returns
+        -------
+        gpi : int
+            Grid point index of nearest grid point.
+        gp_lon : float
+            Lontitude coordinate of nearest grid point.
+        gp_lat : float
+            Latitude coordinate of nearest grid point.
+        gp_dist : float
+            Geodetic distance to nearest grid point.
+        """
+        gpi, gp_dist = self.grid.find_nearest_gpi(lon, lat)
+        gp_lon, gp_lat = self.grid.gpi2lonlat(gpi)
+
+        return gpi, gp_lon, gp_lat, gp_dist
+
+    def write_gp(self, gpi, data, **kwargs):
+        """
+        Write data for given grid point.
+
+        Parameters
+        ----------
+        gpi : int
+            Grid point index.
+        data : numpy.ndarray
+            Data records.
+        """
+        self._open(gpi)
+
+        if self.mode in ['r']:
+            raise IOError("File is not open in write/append mode")
+
+        lon, lat = self.grid.gpi2lonlat(gpi)
+
+        self.fid.write_ts(gpi, data, lon=lon, lat=lat, **kwargs)
+
+    def write_ts(self, *args, **kwargs):
+        """
+        Takes either 2 or 3 arguments (the last one always needs to be the
+        data to be written) and calls the correct function which is either
+        writing the gpi directly or finding the nearest gpi from given
+        lon, lat coordinates and then reading it.
+        """
+        if len(args) == 2:
+            self.write_gp(args[0], args[1], **kwargs)
+        if len(args) == 3:
+            self._write_lonlat(args[0], args[1], args[2], **kwargs)
+        if len(args) < 2 or len(args) > 3:
+            raise ValueError("Wrong number of arguments")
+
+    def read_gp(self, gpi, **kwargs):
+        """
+        Reads time series for a given grid point index.
+
+        Parameters
+        ----------
+        gpi : int
+            grid point index
+
+        Returns
+        -------
+        data : pandas.DataFrame
+            pandas.DateFrame with DateTimeIndex
+        """
+        self._open(gpi)
+
+        if self.mode in ['w', 'a']:
+            raise IOError("File is not open in read mode")
+
+        return self.fid.read_ts(gpi, **kwargs)
+
+    def read_ts(self, *args, **kwargs):
         """
         Takes either 1 or 2 arguments and calls the correct function
         which is either reading the gpi directly or finding
         the nearest gpi from given lat,lon coordinates and then reading it
         """
         if len(args) == 1:
-            # args: data
-            self._write_gp(args[0]['gpi'], args[0], **kwargs)
+            data = self.read_gp(args[0], **kwargs)
         if len(args) == 2:
-            # args: gp, data
-            self._write_gp(args[0], args[1], **kwargs)
-        if len(args) == 3:
-            # args: lon, lat, data
-            self._write_lonlat(args[0], args[1], args[2], **kwargs)
-        if len(args) < 1 or len(args) > 3:
+            data = self._read_lonlat(args[0], args[1], **kwargs)
+        if len(args) < 1 or len(args) > 2:
             raise ValueError("Wrong number of arguments")
 
-    @abc.abstractmethod
-    def _write_gp(self, gp, data, **kwargs):
-        return
+        return data
 
-    def iter_gp(self):
+    def iter_ts(self):
         """
-        Yield all values for all grid points.
+        Yield time series for all grid points.
 
         Yields
         ------
         data : pandas.DataFrame
-            Data set.
-        gp : int
-            Grid point.
+            pandas.DateFrame with DateTimeIndex
+        gpi : int
+            Grid point index
         """
-        gp_info = list(self.grid.grid_points())
-        gps = np.array(gp_info, dtype=np.int)[:, 0]
+        gpi_info = list(self.grid.grid_points())
+        gps = np.array(gpi_info, dtype=np.int)[:, 0]
 
         for gp in gps:
-            yield self._read_gp(gp), gp
+            yield self.read_gp(gp), gp
 
     def flush(self):
         """
@@ -375,138 +610,3 @@ class GriddedBase(object):
         if self.fid is not None:
             self.fid.close()
             self.fid = None
-
-
-class GriddedStaticBase(GriddedBase):
-
-    """
-    The GriddedStaticBase class uses another IO class together with a grid
-    object to read/write a dataset under the given path.
-    """
-
-    def _read_gp(self, gp, **kwargs):
-        """
-        Read data for given grid point.
-
-        Parameters
-        ----------
-        gp : int
-            Grid point.
-
-        Returns
-        -------
-        data : numpy.ndarray
-            Data set.
-        """
-        if self.mode in ['w', 'a']:
-            raise IOError("File is not open in read mode")
-
-        self._open(gp)
-
-        return self.fid.read(gp, **kwargs)
-
-    def _write_gp(self, gp, data, **kwargs):
-        """
-        Write data for given grid point.
-
-        Parameters
-        ----------
-        gp : int
-            Grid point.
-        data : numpy.ndarray
-            Data
-        """
-        if self.mode in ['r']:
-            raise IOError("File is not open in write/append mode")
-
-        self._open(gp)
-        self.fid.write(data, **kwargs)
-
-
-class GriddedTsBase(GriddedBase):
-
-    """
-    The GriddedTsBase class uses another IO class together with a grid object
-    to read/write a time series dataset under the given path.
-    """
-
-    def _read_gp(self, gp, **kwargs):
-        """
-        Reads time series for a given grid point index.
-
-        Parameters
-        ----------
-        gp : int
-            Grid point.
-
-        Returns
-        -------
-        data : pandas.DataFrame
-            pandas.DateFrame with DateTimeIndex
-        """
-        if self.mode in ['w', 'a']:
-            raise IOError("File is not open in read mode")
-
-        self._open(gp)
-
-        return self.fid.read_ts(gp, **kwargs)
-
-    def _write_gp(self, gp, data, **kwargs):
-        """
-        Write data for given grid point.
-
-        Parameters
-        ----------
-        gp : int
-            Grid point.
-        data : numpy.ndarray
-            Data records.
-        """
-        if self.mode in ['r']:
-            raise IOError("File is not open in write/append mode")
-
-        self._open(gp)
-        lon, lat = self.grid.gpi2lonlat(gp)
-        self.fid.write_ts(gp, data, lon=lon, lat=lat, **kwargs)
-
-    def read_ts(self, *args, **kwargs):
-        """
-        Takes either 1 or 2 arguments and calls the correct function
-        which is either reading the gpi directly or finding
-        the nearest gpi from given lat,lon coordinates and then reading it
-        """
-        if len(args) == 1:
-            data = self._read_gp(args[0], **kwargs)
-        if len(args) == 2:
-            data = self._read_lonlat(args[0], args[1], **kwargs)
-        if len(args) < 1 or len(args) > 2:
-            raise ValueError("Wrong number of arguments")
-
-        return data
-
-    def write_ts(self, *args, **kwargs):
-        """
-        Takes either 2 or 3 arguments (the last one always needs to be the
-        data to be written) and calls the correct function which is either
-        writing the gp directly or finding the nearest gp from given
-        lon, lat coordinates and then reading it.
-        """
-        if len(args) == 2:
-            self._write_gp(args[0], args[1], **kwargs)
-        if len(args) == 3:
-            self._write_lonlat(args[0], args[1], args[2], **kwargs)
-        if len(args) < 2 or len(args) > 3:
-            raise ValueError("Wrong number of arguments")
-
-    def iter_ts(self):
-        """
-        Yield time series for all grid points.
-
-        Yields
-        ------
-        data : pandas.DataFrame
-            pandas.DateFrame with DateTimeIndex
-        gp : int
-            Grid point.
-        """
-        yield self.iter_gp()
