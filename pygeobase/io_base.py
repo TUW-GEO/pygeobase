@@ -27,6 +27,8 @@
 
 import os
 import abc
+import warnings
+
 import numpy as np
 
 
@@ -82,12 +84,14 @@ class StaticBase(object):
         """
         return
 
+    @abc.abstractmethod
     def flush(self):
         """
         Flush data.
         """
         return
 
+    @abc.abstractmethod
     def close(self):
         """
         Close file.
@@ -200,7 +204,6 @@ class GriddedBase(object):
         self.fn_format = fn_format
         self.previous_cell = None
         self.fid = None
-        self._first_write = True
 
         if ioclass_kws is None:
             self.ioclass_kws = {}
@@ -257,14 +260,8 @@ class GriddedBase(object):
                 self.flush()
                 self.close()
                 self.previous_cell = cell
-                if self._first_write and self.mode == 'w':
-                    self.fid = self.ioclass(filename, mode=self.mode,
-                                            **self.ioclass_kws)
-                    self._first_write = False
-                else:
-                    # open in append mode after first write
-                    self.fid = self.ioclass(filename, mode='a',
-                                            **self.ioclass_kws)
+                self.fid = self.ioclass(filename, mode=self.mode,
+                                        **self.ioclass_kws)
 
     def _read_lonlat(self, lon, lat, **kwargs):
         """
@@ -286,9 +283,26 @@ class GriddedBase(object):
 
         return self._read_gp(gp, **kwargs)
 
-    @abc.abstractmethod
     def _read_gp(self, gp, **kwargs):
-        return
+        """
+        Read data for given grid point.
+
+        Parameters
+        ----------
+        gp : int
+            Grid point.
+
+        Returns
+        -------
+        data : numpy.ndarray
+            Data set.
+        """
+        if self.mode in ['w', 'a']:
+            raise IOError("File is not open in read mode")
+
+        self._open(gp)
+
+        return self.fid.read(gp, **kwargs)
 
     def read(self, *args, **kwargs):
         """
@@ -340,9 +354,22 @@ class GriddedBase(object):
         if len(args) < 1 or len(args) > 3:
             raise ValueError("Wrong number of arguments")
 
-    @abc.abstractmethod
     def _write_gp(self, gp, data, **kwargs):
-        return
+        """
+        Write data for given grid point.
+
+        Parameters
+        ----------
+        gp : int
+            Grid point.
+        data : numpy.ndarray
+            Data
+        """
+        if self.mode in ['r']:
+            raise IOError("File is not open in write/append mode")
+
+        self._open(gp)
+        self.fid.write(gp, data, **kwargs)
 
     def iter_gp(self):
         """
@@ -384,43 +411,8 @@ class GriddedStaticBase(GriddedBase):
     object to read/write a dataset under the given path.
     """
 
-    def _read_gp(self, gp, **kwargs):
-        """
-        Read data for given grid point.
-
-        Parameters
-        ----------
-        gp : int
-            Grid point.
-
-        Returns
-        -------
-        data : numpy.ndarray
-            Data set.
-        """
-        if self.mode in ['w', 'a']:
-            raise IOError("File is not open in read mode")
-
-        self._open(gp)
-
-        return self.fid.read(gp, **kwargs)
-
-    def _write_gp(self, gp, data, **kwargs):
-        """
-        Write data for given grid point.
-
-        Parameters
-        ----------
-        gp : int
-            Grid point.
-        data : numpy.ndarray
-            Data
-        """
-        if self.mode in ['r']:
-            raise IOError("File is not open in write/append mode")
-
-        self._open(gp)
-        self.fid.write(data, **kwargs)
+    warnings.warn("GriddedStaticBase is deprecated,"
+                  " please use GriddedBase instead.", DeprecationWarning)
 
 
 class GriddedTsBase(GriddedBase):
@@ -475,28 +467,20 @@ class GriddedTsBase(GriddedBase):
         which is either reading the gpi directly or finding
         the nearest gpi from given lat,lon coordinates and then reading it
         """
-        if len(args) == 1:
-            data = self._read_gp(args[0], **kwargs)
-        if len(args) == 2:
-            data = self._read_lonlat(args[0], args[1], **kwargs)
-        if len(args) < 1 or len(args) > 2:
-            raise ValueError("Wrong number of arguments")
-
-        return data
+        warnings.warn("read_ts is deprecated, please use read "
+                      "instead.", DeprecationWarning)
+        return self.read(*args, **kwargs)
 
     def write_ts(self, *args, **kwargs):
         """
-        Takes either 2 or 3 arguments (the last one always needs to be the
+        Takes either 1, 2 or 3 arguments (the last one always needs to be the
         data to be written) and calls the correct function which is either
         writing the gp directly or finding the nearest gp from given
         lon, lat coordinates and then reading it.
         """
-        if len(args) == 2:
-            self._write_gp(args[0], args[1], **kwargs)
-        if len(args) == 3:
-            self._write_lonlat(args[0], args[1], args[2], **kwargs)
-        if len(args) < 2 or len(args) > 3:
-            raise ValueError("Wrong number of arguments")
+        warnings.warn("write_ts is deprecated, please use write "
+                      "instead.", DeprecationWarning)
+        return self.write(*args, **kwargs)
 
     def iter_ts(self):
         """
@@ -509,4 +493,6 @@ class GriddedTsBase(GriddedBase):
         gp : int
             Grid point.
         """
-        yield self.iter_gp()
+        warnings.warn("iter_ts is deprecated, please use iter_gp "
+                      "instead.", DeprecationWarning)
+        return self.iter_gp()
