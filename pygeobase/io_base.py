@@ -204,7 +204,6 @@ class GriddedBase(object):
         self.fn_format = fn_format
         self.previous_cell = None
         self.fid = None
-        self._first_write = True
 
         if ioclass_kws is None:
             self.ioclass_kws = {}
@@ -261,14 +260,8 @@ class GriddedBase(object):
                 self.flush()
                 self.close()
                 self.previous_cell = cell
-                if self._first_write and self.mode == 'w':
-                    self.fid = self.ioclass(filename, mode=self.mode,
-                                            **self.ioclass_kws)
-                    self._first_write = False
-                else:
-                    # open in append mode after first write
-                    self.fid = self.ioclass(filename, mode='a',
-                                            **self.ioclass_kws)
+                self.fid = self.ioclass(filename, mode=self.mode,
+                                        **self.ioclass_kws)
 
     def _read_lonlat(self, lon, lat, **kwargs):
         """
