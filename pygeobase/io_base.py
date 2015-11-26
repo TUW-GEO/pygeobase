@@ -903,7 +903,7 @@ class MultiTemporalImageBase(object):
 
         return filename[0]
 
-    def _assemble_img(self, timestamp, **kwargs):
+    def _assemble_img(self, timestamp, mask=False, **kwargs):
         """
         Function between read_img and _build_filename that can
         be used to read a different file for each parameter in a image
@@ -915,28 +915,23 @@ class MultiTemporalImageBase(object):
         ----------
         timestamp : datetime
             timestamp of the image to assemble
+        mask : optional, boolean
+            Switch to read already masked data which requires the
+            implementation of an read_mask_data() in the ioclass
 
         Returns
         -------
-        data : dict
-            dictionary of numpy arrays that hold the image data for each
-            variable of the dataset
-        metadata : dict
-            dictionary of numpy arrays that hold the metadata
-        timestamp : datetime.datetime
-            exact timestamp of the image
-        lon : numpy.array or None
-            array of longitudes, if None self.grid will be assumed
-        lat : numpy.array or None
-            array of latitudes, if None self.grid will be assumed
-        time_var : string or None
-            variable name of observation times in the data dict, if None all
-            observations have the same timestamp
+        img: object
+            pygeobase.object_base.Image object
         """
         filepath = self._build_filename(timestamp, **kwargs)
         self._open(**kwargs)
         kwargs['timestamp'] = timestamp
-        return self.fid.read(filepath, **kwargs)
+        if mask is False:
+            img = self.fid.read(filepath, **kwargs)
+        else:
+            img = self.fid.read_masked_data(filepath, **kwargs)
+        return img
 
     def read(self, timestamp, **kwargs):
         """
