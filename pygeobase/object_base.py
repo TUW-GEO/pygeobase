@@ -53,7 +53,7 @@ class Image(object):
     """
     The Image class represents the base object of an image.
     """
-    def __init__(self, data, metadata, lon, lat, timestamp):
+    def __init__(self, data, metadata, lon, lat, timestamp, timekey='jd'):
         """
         Initialization of the image object.
 
@@ -70,6 +70,8 @@ class Image(object):
             array of latitudes, if None self.grid will be assumed
         timestamp : datetime.datetime
             exact timestamp of the image
+        timekey : str
+            Key of the time variable stored in data dictionary.
         """
 
         self.data = data
@@ -77,3 +79,4 @@ class Image(object):
         self.lon = lon
         self.lat = lat
         self.timestamp = timestamp
+        self.timekey = timekey
