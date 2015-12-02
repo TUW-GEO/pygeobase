@@ -222,6 +222,31 @@ class ImageBase(object):
         """
         raise NotImplementedError('Please implement to enable.')
 
+    def resample_data(self, image, index, weights, **kwargs):
+        """
+        Takes an image and resample (interpolate) the image data to
+        arbitrary defined locations given by index and distance.
+
+        Parameters
+        ----------
+        image : object
+            pygeobase.object_base.Image object
+        index : np.array
+            Index into image data defining a look-up table for data elements
+            used in the interpolation process for each defined target
+            location.
+        weights : np.array
+            Array representing the weights to be used for resampling (
+            interpolation) of each data element.
+
+        Returns
+        -------
+        image : object
+            pygeobase.object_base.Image object
+        """
+        raise NotImplementedError('Please implement to enable spatial '
+                                  'resampling.')
+
     @abc.abstractmethod
     def write(self, filename, image, **kwargs):
         """
