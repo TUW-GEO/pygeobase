@@ -28,6 +28,7 @@
 import os
 import abc
 import glob
+from datetime import datetime
 import numpy as np
 
 
@@ -175,23 +176,20 @@ class ImageBase(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, filename, mode='r', **kwargs):
+    def __init__(self, mode='r', **kwargs):
         """
         Initialization of i/o object.
 
         Parameters
         ----------
-        filename : str
-            File name.
         mode : str, optional
             Opening mode. Default: r
         """
-        self.filename = filename
         self.mode = mode
         self.kwargs = kwargs
 
     @abc.abstractmethod
-    def read_img(self, filename, **kwargs):
+    def read(self, filename, **kwargs):
         """
         Read data of an image file.
 
@@ -202,13 +200,30 @@ class ImageBase(object):
 
         Returns
         -------
-        data : numpy.ndarray
-            Data set.
+        image : object
+            pygeobase.object_base.Image object
         """
         return
 
+    def read_masked_data(self, filename, **kwargs):
+        """
+        Read data of an image file and mask the data according to
+        specifications.
+
+        Parameters
+        ----------
+        filename : str
+            File name.
+
+        Returns
+        -------
+        image : object
+            pygeobase.object_base.Image object
+        """
+        raise NotImplementedError('Please implement to enable.')
+
     @abc.abstractmethod
-    def write_img(self, filename, data, **kwargs):
+    def write(self, filename, image, **kwargs):
         """
         Write data to an image file.
 
@@ -216,8 +231,8 @@ class ImageBase(object):
         ----------
         filename : str
             File name.
-        data : numpy.ndarray
-            Data records.
+        image : object
+            pygeobase.object_base.Image object
         """
         return
 
@@ -692,22 +707,43 @@ class MultiTemporalImageBase(object):
         IO class.
     mode : str, optional
         File mode and can be read 'r', write 'w' or append 'a'. Default: 'r'
-    fn_format : str, optional
-        The string format of the cell files. Default: '{:04d}'
+    fname_templ : str
+        Filename template of the data to read. Default placeholder for
+        parsing datetime information into the fname_templ is "{datetime}".
+        e.g. "ASCAT_{datetime}_image.nc" will be translated into the filename
+        ASCAT_20070101_image.nc for the date 2007-01-01.
+    datetime_format : str
+        String specifying the format of the datetime object to be parsed
+        into the fname_template.
+        e.g. "%Y/%m" will result in 2007/01 for datetime 2007-01-01 12:15:00
+    subpath_templ : list, optional
+        If given it is used to generate a sub-paths from the given timestamp.
+        Each item in the list represents one folder level. This can be used
+        if the files for May 2007 are e.g. in folders 2007/05/ then the
+        files can be accessed via the list ['%Y', '%m'].
     ioclass_kws : dict
         Additional keyword arguments for the ioclass.
+    exact_templ : boolean, optional
+        If True then the fname_templ matches the filename exactly.
+        If False then the fname_templ will be used in glob to find the file.
+    dtime_placeholder : str
+        String used in fname_templ as placeholder for datetime.
+        Default value is "datetime".
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, path, ioclass, mode='r', fname_templ=None,
-                 sub_path=None, ioclass_kws=None, exact_templ=True):
+    def __init__(self, path, ioclass, mode='r', fname_templ="",
+                 datetime_format="", subpath_templ=None, ioclass_kws=None,
+                 exact_templ=True, dtime_placeholder="datetime"):
 
         self.path = path
         self.ioclass = ioclass
         self.mode = mode
         self.fname_templ = fname_templ
-        self.sub_path = sub_path
+        self.datetime_format = datetime_format
+        self.subpath_templ = subpath_templ
         self.exact_templ = exact_templ
+        self.dtime_placeholder = dtime_placeholder
         self.fid = None
 
         if ioclass_kws is None:
@@ -756,8 +792,21 @@ class MultiTemporalImageBase(object):
             self.fid.close()
             self.fid = None
 
-    def _search_files(self, timestamp, custom_templ=None,
-                      str_param=None):
+    def _open(self):
+        """
+        Open file.
+
+        Parameters
+        ----------
+        filepath : str
+            Path to file.
+        """
+        if self.fid is None:
+            self.fid = self.ioclass(mode=self.mode, **self.ioclass_kws)
+
+
+    def _search_files(self, timestamp, custom_templ=None, str_param=None,
+                      custom_datetime_format=None):
         """
         searches for filenames with the given timestamp. This function is
         used by _build_filename which then checks if a unique filename was
@@ -766,33 +815,46 @@ class MultiTemporalImageBase(object):
         Parameters
         ----------
         timestamp: datetime
-            datetime for given filename
+            Datetime for given filename
         custom_tmpl : string, optional
-            if given not the fname_templ is used but the custom_templ. This
-            is convenient for some datasets where not all filenames follow
-            the same convention and where the read_img function can choose
+            If given the custom_templ is used instead of the fname_templ. This
+            is convenient for some datasets where not all file names follow
+            the same convention and where the read_image function can choose
             between templates based on some condition.
+        custom_datetime_format: string, optional
+            If given the custom_datetime_format will be used instead of the
+            datetime_format. This adds support to search for multiple files
+            for example for a given day, a given month or a specific year.
         str_param : dict, optional
-            if given then this dict will be applied to the template using
-            the fname_template.format(**str_param) notation before the resulting
+            If given then this dict will be applied to the fname_templ using
+            the fname_templ.format(**str_param) notation before the resulting
             string is put into datetime.strftime.
 
-            example from python documentation
-            >>> coord = {'latitude': '37.24N', 'longitude': '-115.81W'}
-            >>> 'Coordinates: {latitude}, {longitude}'.format(**coord)
-            'Coordinates: 37.24N, -115.81W'
+            - example from python documentation:
+                coord = {'latitude': '37.24N', 'longitude': '-115.81W'}
+                'Coordinates: {latitude}, {longitude}'.format(**coord)
+                'Coordinates: 37.24N, -115.81W'
         """
         if custom_templ is not None:
             fname_templ = custom_templ
         else:
             fname_templ = self.fname_templ
 
+        if custom_datetime_format is not None:
+            dFormat = {self.dtime_placeholder: custom_datetime_format}
+
+        else:
+            dFormat = {self.dtime_placeholder: self.datetime_format}
+
+        fname_templ = fname_templ.format(**dFormat)
+
         if str_param is not None:
             fname_templ = fname_templ.format(**str_param)
 
         sub_path = ''
-        if self.sub_path is not None:
-            sub_path = timestamp.strftime(self.sub_path_templ)
+        if self.subpath_templ is not None:
+            for s in self.subpath_templ:
+                 sub_path = os.path.join(sub_path, timestamp.strftime(s))
 
         search_file = os.path.join(self.path, sub_path,
                                    timestamp.strftime(fname_templ))
@@ -818,17 +880,16 @@ class MultiTemporalImageBase(object):
         timestamp: datetime
             datetime for given filename
         custom_tmpl : string, optional
-            if given not the fname_templ is used but the custom templ
-            This is convenient for some datasets where no all filenames
-            follow the same convention and where the read_img function
-            can choose between templates based on some condition.
+            If given the fname_templ is not used but the custom_templ. This
+            is convenient for some datasets where not all file names follow
+            the same convention and where the read_image function can choose
+            between templates based on some condition.
         str_param : dict, optional
-            if given then this dict will be applied to the template using
-            the fname_template.format(**str_param) notation before the resulting
+            If given then this dict will be applied to the fname_templ using
+            the fname_templ.format(**str_param) notation before the resulting
             string is put into datetime.strftime.
 
             example from python documentation
-
             >>> coord = {'latitude': '37.24N', 'longitude': '-115.81W'}
             >>> 'Coordinates: {latitude}, {longitude}'.format(**coord)
             'Coordinates: 37.24N, -115.81W'
@@ -847,12 +908,12 @@ class MultiTemporalImageBase(object):
         Function between read_img and _build_filename that can
         be used to read a different file for each parameter in a image
         dataset. In the standard implementation it is assumed
-        that all necessary information of a image is stored in the
+        that all necessary information of an image is stored in the
         one file whose filename is built by the _build_filname function.
 
         Parameters
         ----------
-        timestamp : datatime
+        timestamp : datetime
             timestamp of the image to assemble
 
         Returns
@@ -872,10 +933,12 @@ class MultiTemporalImageBase(object):
             variable name of observation times in the data dict, if None all
             observations have the same timestamp
         """
-        return self.fid.read_img(self._build_filename(timestamp, **kwargs),
-                                 **kwargs)
+        filepath = self._build_filename(timestamp, **kwargs)
+        self._open(**kwargs)
+        kwargs['timestamp'] = timestamp
+        return self.fid.read(filepath, **kwargs)
 
-    def read_image(self, timestamp, **kwargs):
+    def read(self, timestamp, **kwargs):
         """
         Return an image for a specific timestamp.
 
@@ -903,13 +966,13 @@ class MultiTemporalImageBase(object):
         """
         return self._assemble_img(timestamp, **kwargs)
 
-    def write_image(self, timestamp, data, **kwargs):
+    def write(self, timestamp, data, **kwargs):
         """
-        Write data for given grid point.
+        Write image data for a given timestamp.
 
         Parameters
         ----------
-         timestamp : datetime.datetime
+        timestamp : datetime.datetime
             exact timestamp of the image
         data : numpy.ndarray
             Data records.
@@ -918,7 +981,28 @@ class MultiTemporalImageBase(object):
             raise IOError("File is not open in write/append mode")
         filename = self._build_filename(timestamp)
 
-        self.fid.write_ts(filename, data, **kwargs)
+        self.fid.write(filename, data, **kwargs)
+
+    def get_tstamp_from_filename(self, filename):
+        """
+        Return the timestamp contained in a given file name in accordance to
+        the defined fname_templ.
+
+        Parameters
+        ----------
+        filename : string
+            File name.
+
+        Returns
+        -------
+        tstamp : datetime.dateime
+            Time stamp according to fname_templ as datetime object.
+        """
+        StartPos = self.fname_templ.find(self.dtime_placeholder) - 1
+        EndPos = StartPos + len(datetime.now().strftime(self.datetime_format))
+        StringDate = filename[StartPos:EndPos]
+        return datetime.strptime(StringDate, self.datetime_format)
+
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
@@ -974,7 +1058,7 @@ class MultiTemporalImageBase(object):
 
         if timestamps:
             for timestamp in timestamps:
-                yield_img = self.read_img(timestamp, **kwargs)
+                yield_img = self.read(timestamp, **kwargs)
                 yield yield_img
         else:
             raise IOError("no files found for given date range")
