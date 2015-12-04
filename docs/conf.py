@@ -17,7 +17,7 @@ from sphinx import apidoc
 __location__ = os.path.join(os.getcwd(), os.path.dirname(
     inspect.getfile(inspect.currentframe())))
 
-package = "pygeobase_scaffold"
+package = "pygeobase"
 namespace = []
 namespace_pkg = ".".join([namespace[-1], package]) if namespace else package
 
@@ -51,8 +51,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pygeobase_scaffold'
-copyright = u'2015, Sebastian Hahn'
+project = u'pygeobase'
+copyright = u'2015, TU Wien'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -183,7 +183,7 @@ html_static_path = ['_static']
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pygeobase_scaffold-doc'
+htmlhelp_basename = 'pygeobase-doc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -202,8 +202,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'user_guide.tex', u'pygeobase_scaffold Documentation',
-   u'Sebastian Hahn', 'manual'),
+  ('index', 'user_guide.tex', u'pygeobase Documentation',
+   u'TU Wien', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
