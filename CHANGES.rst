@@ -2,10 +2,11 @@
 Changelog
 =========
 
-Version x.x.x
+Version 0.3.2
 =============
 
 - Add ImageBase class (moved from pytesmo)
+- Fixing documentation
 
 Version 0.3.1
 =============
