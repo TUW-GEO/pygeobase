@@ -167,7 +167,315 @@ class TsBase(object):
 
 
 class ImageBase(object):
-    pass
+
+    """
+    Dateset base class for images that implements basic functions and
+    also abstract methods that have to be implemented by child classes.
+
+    Parameters
+    ----------
+    path : string
+        Path to dataset.
+    filename_templ : string
+        template of how datetimes fit into the filename.
+        e.g. "ASCAT_%Y%m%d_image.nc" will be translated into the filename
+        ASCAT_20070101_image.nc for the date 2007-01-01.
+    sub_path : string or list optional
+        if given it is used to generate a sub path from the given timestamp.
+        This is useful if files are sorted by year or month.
+        If a list is one subfolder per item is assumed. This can be used
+        if the files for May 2007 are e.g. in folders 2007/05/ then the
+        list ['%Y', '%m'] works.
+    grid : pygeogrids.grids.BasicGrid of CellGrid instance, optional
+        Grid on which all the images of the dataset are stored. This is not
+        relevant for datasets that are stored e.g. in orbit geometry
+    exact_templ : boolean, optional
+        if True then the filename_templ matches the filename exactly.
+        If False then the filename_templ will be used in glob to find
+        the file.
+    """
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, path, filename_templ="",
+                 sub_path=None, grid=None,
+                 exact_templ=True):
+        self.grid = grid
+        self.fname_templ = filename_templ
+        self.path = path
+        if type(sub_path) == str:
+            sub_path = [sub_path]
+        self.sub_path = sub_path
+        self.exact_templ = exact_templ
+
+    @abc.abstractmethod
+    def _read_spec_file(self, filename, timestamp=None, **kwargs):
+        """
+        Read specific image for given filename
+
+        Parameters
+        ----------
+        filename : string
+            filename
+        timestamp : datetime, optional
+           can be given here if it is already
+           known since it has to be returned.
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold the metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        time : numpy.array or None
+            observation times of the data as numpy array of julian dates,
+            if None all observations have the same timestamp
+        """
+        return
+
+    def _search_files(self, timestamp, custom_templ=None,
+                      str_param=None):
+        """
+        searches for filenames for the given timestamp.
+        This function is used by _build_filename which then
+        checks if a unique filename was found
+
+        Parameters
+        ----------
+        timestamp: datetime
+            datetime for given filename
+        custom_tmpl : string, optional
+            if given not the fname_templ is used but the custom templ
+            This is convienint for some datasets where no all filenames
+            follow the same convention and where the read_img function
+            can choose between templates based on some condition.
+        str_param : dict, optional
+            if given then this dict will be applied to the template using
+            the fname_template.format(**str_param) notation before the resulting
+            string is put into datetime.strftime.
+
+            example from python documentation
+            >>> coord = {'latitude': '37.24N', 'longitude': '-115.81W'}
+            >>> 'Coordinates: {latitude}, {longitude}'.format(**coord)
+            'Coordinates: 37.24N, -115.81W'
+        """
+        if custom_templ is not None:
+            fname_templ = custom_templ
+        else:
+            fname_templ = self.fname_templ
+
+        if str_param is not None:
+            fname_templ = fname_templ.format(**str_param)
+        if self.sub_path is None:
+            search_file = os.path.join(
+                self.path, timestamp.strftime(fname_templ))
+
+        else:
+            sub_path = ""
+            for s in self.sub_path:
+                sub_path = os.path.join(sub_path, timestamp.strftime(s))
+            search_file = os.path.join(self.path,
+                                       sub_path,
+                                       timestamp.strftime(fname_templ))
+        if self.exact_templ:
+            return [search_file]
+        else:
+            filename = glob.glob(search_file)
+
+        if not filename:
+            raise IOError("File not found {:}".format(search_file))
+
+        return filename
+
+    def _build_filename(self, timestamp, custom_templ=None,
+                        str_param=None):
+        """
+        This function uses _search_files to find the correct
+        filename and checks if the search was unambiguous
+
+        Parameters
+        ----------
+        timestamp: datetime
+            datetime for given filename
+        custom_tmpl : string, optional
+            if given not the fname_templ is used but the custom templ
+            This is convienint for some datasets where no all filenames
+            follow the same convention and where the read_img function
+            can choose between templates based on some condition.
+        str_param : dict, optional
+            if given then this dict will be applied to the template using
+            the fname_template.format(**str_param) notation before the resulting
+            string is put into datetime.strftime.
+
+            example from python documentation
+
+            >>> coord = {'latitude': '37.24N', 'longitude': '-115.81W'}
+            >>> 'Coordinates: {latitude}, {longitude}'.format(**coord)
+            'Coordinates: 37.24N, -115.81W'
+        """
+        filename = self._search_files(timestamp, custom_templ=custom_templ,
+                                      str_param=str_param)
+
+        if len(filename) > 1:
+            raise IOError(
+                "File search is ambiguous {:}".format(filename))
+
+        return filename[0]
+
+    def _assemble_img(self, timestamp, **kwargs):
+        """
+        Function between read_img and _build_filename that can
+        be used to read a different file for each parameter in a image
+        dataset. In the standard impementation it is assumed
+        that all necessary information of a image is stored in the
+        one file whose filename is built by the _build_filname function.
+
+        Parameters
+        ----------
+        timestamp : datatime
+            timestamp of the image to assemble
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold the metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        time_var : string or None
+            variable name of observation times in the data dict, if None all
+            observations have the same timestamp
+        """
+        return self._read_spec_file(self._build_filename(timestamp),
+                                    timestamp=timestamp, **kwargs)
+
+    def read_img(self, timestamp, **kwargs):
+        """
+        Return an image if a specific datetime is given.
+
+        Parameters
+        ----------
+        timestamp : datetime.datetime
+            Time stamp.
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold the metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        time_var : string or None
+            variable name of observation times in the data dict, if None all
+            observations have the same timestamp
+        """
+        return self._assemble_img(timestamp, **kwargs)
+
+    def tstamps_for_daterange(self, start_date, end_date):
+        """
+        Return all valid timestamps in a given date range.
+        This method must be implemented if iteration over
+        images should be possible.
+
+        Parameters
+        ----------
+        start_date : datetime.date or datetime.datetime
+            start date
+        end_date : datetime.date or datetime.datetime
+            end date
+
+        Returns
+        -------
+        dates : list
+            list of datetimes
+        """
+
+        raise NotImplementedError(
+            "Please implement to enable iteration over date ranges.")
+
+    def iter_images(self, start_date, end_date, **kwargs):
+        """
+        Yield all images for a given date range.
+
+        Parameters
+        ----------
+        start_date : datetime.date or datetime.datetime
+            start date
+        end_date : datetime.date or datetime.datetime
+            end date
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold the metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        time_var : string or None
+            variable name of observation times in the data dict, if None all
+            observations have the same timestamp
+        """
+        timestamps = self.tstamps_for_daterange(start_date, end_date)
+
+        if timestamps:
+            for timestamp in timestamps:
+                yield_img = self.read_img(
+                    timestamp, **kwargs)
+                yield yield_img
+        else:
+            raise IOError("no files found for given date range")
+
+    def daily_images(self, day, **kwargs):
+        """
+        Yield all images for a day.
+
+        Parameters
+        ----------
+        day : datetime.date
+
+        Returns
+        -------
+        data : dict
+            dictionary of numpy arrays that hold the image data for each
+            variable of the dataset
+        metadata : dict
+            dictionary of numpy arrays that hold metadata
+        timestamp : datetime.datetime
+            exact timestamp of the image
+        lon : numpy.array or None
+            array of longitudes, if None self.grid will be assumed
+        lat : numpy.array or None
+            array of latitudes, if None self.grid will be assumed
+        jd : string or None
+            name of the field in the data array representing the observation
+            dates
+        """
+        for img in self.iter_images(day, day, **kwargs):
+            yield img
 
 
 class GriddedBase(object):
