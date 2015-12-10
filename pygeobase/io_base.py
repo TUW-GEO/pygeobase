@@ -176,27 +176,25 @@ class ImageBase(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, mode='r', **kwargs):
+    def __init__(self, filename, mode='r', **kwargs):
         """
         Initialization of i/o object.
 
         Parameters
         ----------
+        filename : str
+            Filename path.
         mode : str, optional
             Opening mode. Default: r
         """
+        self.filename = filename
         self.mode = mode
         self.kwargs = kwargs
 
     @abc.abstractmethod
-    def read(self, filename, **kwargs):
+    def read(self, **kwargs):
         """
         Read data of an image file.
-
-        Parameters
-        ----------
-        filename : str
-            File name.
 
         Returns
         -------
@@ -205,15 +203,10 @@ class ImageBase(object):
         """
         return
 
-    def read_masked_data(self, filename, **kwargs):
+    def read_masked_data(self, **kwargs):
         """
         Read data of an image file and mask the data according to
         specifications.
-
-        Parameters
-        ----------
-        filename : str
-            File name.
 
         Returns
         -------
@@ -248,14 +241,12 @@ class ImageBase(object):
                                   'resampling.')
 
     @abc.abstractmethod
-    def write(self, filename, image, **kwargs):
+    def write(self, image, **kwargs):
         """
         Write data to an image file.
 
         Parameters
         ----------
-        filename : str
-            File name.
         image : object
             pygeobase.object_base.Image object
         """
@@ -702,7 +693,7 @@ class MultiTemporalImageBase(object):
             self.fid.close()
             self.fid = None
 
-    def _open(self):
+    def _open(filepath, self):
         """
         Open file.
 
@@ -711,8 +702,8 @@ class MultiTemporalImageBase(object):
         filepath : str
             Path to file.
         """
-        if self.fid is None:
-            self.fid = self.ioclass(mode=self.mode, **self.ioclass_kws)
+        self.close()
+        self.fid = self.ioclass(filepath, mode=self.mode, **self.ioclass_kws)
 
 
     def _search_files(self, timestamp, custom_templ=None, str_param=None,
@@ -835,12 +826,12 @@ class MultiTemporalImageBase(object):
             pygeobase.object_base.Image object
         """
         filepath = self._build_filename(timestamp, **kwargs)
-        self._open(**kwargs)
+        self._open(filepath, **kwargs)
         kwargs['timestamp'] = timestamp
         if mask is False:
-            img = self.fid.read(filepath, **kwargs)
+            img = self.fid.read(**kwargs)
         else:
-            img = self.fid.read_masked_data(filepath, **kwargs)
+            img = self.fid.read_masked_data(**kwargs)
         return img
 
     def read(self, timestamp, **kwargs):
