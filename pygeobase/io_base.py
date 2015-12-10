@@ -136,8 +136,8 @@ class TsBase(object):
 
         Returns
         -------
-        data : numpy.ndarray
-            Data set.
+        data : object
+            pygeobase.object_base.TS object.
         """
         return
 
@@ -150,8 +150,8 @@ class TsBase(object):
         ----------
         gpi : int
             Grid point index.
-        data : numpy.ndarray
-            Data records.
+        data : object
+            pygeobase.object_base.TS object.
         """
         return
 
@@ -530,8 +530,8 @@ class GriddedTsBase(GriddedBase):
 
         Returns
         -------
-        data : pandas.DataFrame
-            pandas.DateFrame with DateTimeIndex
+        data : object
+            pygeobase.object_base.TS object
         """
         if self.mode in ['w', 'a']:
             raise IOError("File is not open in read mode")
@@ -548,8 +548,8 @@ class GriddedTsBase(GriddedBase):
         ----------
         gp : int
             Grid point.
-        data : numpy.ndarray
-            Data records.
+        data : object
+            pygeobase.object_base.TS object
         """
         if self.mode in ['r']:
             raise IOError("File is not open in write/append mode")
@@ -584,8 +584,8 @@ class GriddedTsBase(GriddedBase):
         Yield time series for all grid points.
         Yields
         ------
-        data : pandas.DataFrame
-            pandas.DateFrame with DateTimeIndex
+        data : object
+            pygeobase.object_base.TS object
         gp : int
             Grid point.
         """
@@ -845,20 +845,8 @@ class MultiTemporalImageBase(object):
 
         Returns
         -------
-        data : dict
-            dictionary of numpy arrays that hold the image data for each
-            variable of the dataset
-        metadata : dict
-            dictionary of numpy arrays that hold the metadata
-        timestamp : datetime.datetime
-            exact timestamp of the image
-        lon : numpy.array or None
-            array of longitudes, if None self.grid will be assumed
-        lat : numpy.array or None
-            array of latitudes, if None self.grid will be assumed
-        time_var : string or None
-            variable name of observation times in the data dict, if None all
-            observations have the same timestamp
+        image : object
+            pygeobase.object_base.Image object
         """
         return self._assemble_img(timestamp, **kwargs)
 
@@ -870,8 +858,8 @@ class MultiTemporalImageBase(object):
         ----------
         timestamp : datetime.datetime
             exact timestamp of the image
-        data : numpy.ndarray
-            Data records.
+        data : object
+            pygeobase.object_base.Image object
         """
         if self.mode in ['r']:
             raise IOError("File is not open in write/append mode")
@@ -935,20 +923,8 @@ class MultiTemporalImageBase(object):
 
         Returns
         -------
-        data : dict
-            dictionary of numpy arrays that hold the image data for each
-            variable of the dataset
-        metadata : dict
-            dictionary of numpy arrays that hold the metadata
-        timestamp : datetime.datetime
-            exact timestamp of the image
-        lon : numpy.array or None
-            array of longitudes, if None self.grid will be assumed
-        lat : numpy.array or None
-            array of latitudes, if None self.grid will be assumed
-        time_var : string or None
-            variable name of observation times in the data dict, if None all
-            observations have the same timestamp
+        image : object
+            pygeobase.object_base.Image object
         """
         timestamps = self.tstamps_for_daterange(start_date, end_date)
 
@@ -969,20 +945,8 @@ class MultiTemporalImageBase(object):
 
         Returns
         -------
-        data : dict
-            dictionary of numpy arrays that hold the image data for each
-            variable of the dataset
-        metadata : dict
-            dictionary of numpy arrays that hold metadata
-        timestamp : datetime.datetime
-            exact timestamp of the image
-        lon : numpy.array or None
-            array of longitudes, if None self.grid will be assumed
-        lat : numpy.array or None
-            array of latitudes, if None self.grid will be assumed
-        jd : string or None
-            name of the field in the data array representing the observation
-            dates
+        img : object
+            pygeobase.object_base.Image object
         """
         for img in self.iter_images(day, day, **kwargs):
             yield img
