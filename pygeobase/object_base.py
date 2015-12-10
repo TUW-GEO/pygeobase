@@ -25,58 +25,85 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import pandas as pd
+import numpy as np
+
 
 class TS(object):
     """
     The TS class represents the base object of a time series.
     """
-    def __init__(self, gpi, data, metadata):
+    def __init__(self, gpi, lon, lat, data, metadata):
         """
-        Initialization of the image object.
+        Initialization of the time series object.
 
         Parameters
         ----------
-        gpi : int
-            Grid point index associated with the time series
+        lon : float
+            Longitude of the time series
+        lat : float
+            Latitude of the time series
         data : pandas.DataFrame
             Pandas DataFrame that holds data for each variable of the time
             series
         metadata : dict
-            dictionary of numpy arrays that hold the metadata
+            dictionary that holds metadata
         """
         self.gpi = gpi
+        self.lon = lon
+        self.lat = lat
         self.data = data
         self.metadata = metadata
+
+    def __repr__(self):
+        return "Time series gpi:%d lat:%2.3f lon:%3.3f" % (self.gpi,
+                                                           self.lat,
+                                                           self.lon)
+
+    def plot(self, *args, **kwargs):
+        """
+        wrapper for pandas.DataFrame.plot which adds title to plot
+        and drops NaN values for plotting
+
+        Returns
+        -------
+        ax : axes
+            matplotlib axes of the plot
+        """
+
+        tempdata = self.data.dropna(how='all')
+        ax = tempdata.plot(*args, figsize=(15, 5), **kwargs)
+        ax.set_title(self.__repr__())
+        return ax
 
 
 class Image(object):
     """
     The Image class represents the base object of an image.
     """
-    def __init__(self, data, metadata, lon, lat, timestamp, timekey='jd'):
+    def __init__(self, lon, lat, data, metadata, timestamp, timekey='jd'):
         """
         Initialization of the image object.
 
         Parameters
         ----------
+        lon : numpy.array
+            array of longitudes
+        lat : numpy.array
+            array of latitudes
         data : dict
             dictionary of numpy arrays that holds the image data for each
             variable of the dataset
         metadata : dict
-            dictionary of numpy arrays that hold the metadata
-        lon : numpy.array or None
-            array of longitudes, if None self.grid will be assumed
-        lat : numpy.array or None
-            array of latitudes, if None self.grid will be assumed
+            dictionary that holds metadata
         timestamp : datetime.datetime
             exact timestamp of the image
-        timekey : str
-            Key of the time variable stored in data dictionary.
+        timekey : str, optional
+            Key of the time variable, if available, stored in data dictionary.
         """
-
-        self.data = data
-        self.metadata = metadata
         self.lon = lon
         self.lat = lat
+        self.data = data
+        self.metadata = metadata
         self.timestamp = timestamp
         self.timekey = timekey
