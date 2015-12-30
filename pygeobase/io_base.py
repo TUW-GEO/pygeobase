@@ -215,7 +215,7 @@ class ImageBase(object):
         """
         raise NotImplementedError('Please implement to enable.')
 
-    def resample_data(self, image, index, weights, **kwargs):
+    def resample_data(self, image, index, distance, windowRadius, **kwargs):
         """
         Takes an image and resample (interpolate) the image data to
         arbitrary defined locations given by index and distance.
@@ -228,9 +228,9 @@ class ImageBase(object):
             Index into image data defining a look-up table for data elements
             used in the interpolation process for each defined target
             location.
-        weights : np.array
-            Array representing the weights to be used for resampling (
-            interpolation) of each data element.
+        distance : np.array
+            Array representing the distances of the image data to the
+            arbitrary defined locations.
 
         Returns
         -------
@@ -693,7 +693,7 @@ class MultiTemporalImageBase(object):
             self.fid.close()
             self.fid = None
 
-    def _open(filepath, self):
+    def _open(self, filepath):
         """
         Open file.
 
@@ -766,7 +766,7 @@ class MultiTemporalImageBase(object):
             filename = glob.glob(search_file)
 
         if not filename:
-            raise IOError("File not found {:}".format(search_file))
+            filename = []
 
         return filename
 
@@ -797,7 +797,8 @@ class MultiTemporalImageBase(object):
         """
         filename = self._search_files(timestamp, custom_templ=custom_templ,
                                       str_param=str_param)
-
+        if len(filename) == 0:
+            raise IOError("No file found for {:}".format(timestamp.ctime()))
         if len(filename) > 1:
             raise IOError(
                 "File search is ambiguous {:}".format(filename))
@@ -950,3 +951,6 @@ class MultiTemporalImageBase(object):
         """
         for img in self.iter_images(day, day, **kwargs):
             yield img
+
+    def resample_image(self, *args, **kwargs):
+        return self.fid.resample_data(*args, **kwargs)
