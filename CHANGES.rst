@@ -2,6 +2,18 @@
 Changelog
 =========
 
+Version 0.3.4
+=============
+
+- Add conda requirements file
+- Add object base classes for time series and image
+- Add image base and multitemporal-image base classes
+
+Version 0.3.3
+=============
+
+- Update requirements
+
 Version 0.3.2
 =============
 
