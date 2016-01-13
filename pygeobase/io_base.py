@@ -341,7 +341,13 @@ class GriddedBase(object):
         ----------
         gp : int
             Grid point.
+
+        Returns
+        -------
+        success : boolean
+            Flag if opening the file was successful.
         """
+        success = False
         cell = self.grid.gpi2cell(gp)
         filename = os.path.join(self.path, self.fn_format.format(cell))
 
@@ -349,16 +355,32 @@ class GriddedBase(object):
             if self.previous_cell != cell:
                 self.close()
                 self.previous_cell = cell
-                self.fid = self.ioclass(filename, mode=self.mode,
-                                        **self.ioclass_kws)
+
+                try:
+                    self.fid = self.ioclass(filename, mode=self.mode,
+                                            **self.ioclass_kws)
+                    success = True
+                except IOError as e:
+                    self.fid = None
+                    warning.warns(
+                        "I/O error({0}): {1}".format(e.errno, e.strerror),
+                        RuntimeWarning)
 
         if self.mode in ['w', 'a']:
             if self.previous_cell != cell:
                 self.flush()
                 self.close()
                 self.previous_cell = cell
-                self.fid = self.ioclass(filename, mode=self.mode,
-                                        **self.ioclass_kws)
+                try:
+                    self.fid = self.ioclass(filename, mode=self.mode,
+                                            **self.ioclass_kws)
+                    success = True
+                except IOError as e:
+                    self.fid = None
+                    warning.warns(
+                        "I/O error({0}): {1}".format(e.errno, e.strerror),
+                        RuntimeWarning)
+        return success
 
     def _read_lonlat(self, lon, lat, **kwargs):
         """
@@ -392,14 +414,17 @@ class GriddedBase(object):
         Returns
         -------
         data : numpy.ndarray
-            Data set.
+            Data set or None in case of an error.
         """
         if self.mode in ['w', 'a']:
             raise IOError("File is not open in read mode")
 
-        self._open(gp)
+        data = None
 
-        return self.fid.read(gp, **kwargs)
+        if self._open(gp):
+            data = self.fid.read(gp, **kwargs)
+
+        return data
 
     def read(self, *args, **kwargs):
         """
@@ -465,8 +490,8 @@ class GriddedBase(object):
         if self.mode in ['r']:
             raise IOError("File is not open in write/append mode")
 
-        self._open(gp)
-        self.fid.write(gp, data, **kwargs)
+        if self._open(gp):
+            self.fid.write(gp, data, **kwargs)
 
     def iter_gp(self):
         """
@@ -536,9 +561,12 @@ class GriddedTsBase(GriddedBase):
         if self.mode in ['w', 'a']:
             raise IOError("File is not open in read mode")
 
-        self._open(gp)
+        data = None
 
-        return self.fid.read_ts(gp, **kwargs)
+        if self._open(gp):
+            data = self.fid.read_ts(gp, **kwargs)
+
+        return data
 
     def _write_gp(self, gp, data, **kwargs):
         """
@@ -554,9 +582,9 @@ class GriddedTsBase(GriddedBase):
         if self.mode in ['r']:
             raise IOError("File is not open in write/append mode")
 
-        self._open(gp)
-        lon, lat = self.grid.gpi2lonlat(gp)
-        self.fid.write_ts(gp, data, lon=lon, lat=lat, **kwargs)
+        if self._open(gp):
+            lon, lat = self.grid.gpi2lonlat(gp)
+            self.fid.write_ts(gp, data, lon=lon, lat=lat, **kwargs)
 
     def read_ts(self, *args, **kwargs):
         """
@@ -701,9 +729,25 @@ class MultiTemporalImageBase(object):
         ----------
         filepath : str
             Path to file.
+
+        Returns
+        -------
+        success : boolean
+            Flag if opening the file was successful.
         """
+        success = False
         self.close()
-        self.fid = self.ioclass(filepath, mode=self.mode, **self.ioclass_kws)
+
+        try:
+            self.fid = self.ioclass(filepath, mode=self.mode,
+                                    **self.ioclass_kws)
+            success = True
+        except IOError as e:
+            self.fid = None
+            warning.warns("I/O error({0}): {1}".format(e.errno, e.strerror),
+                          RuntimeWarning)
+
+        return success
 
     def _search_files(self, timestamp, custom_templ=None, str_param=None,
                       custom_datetime_format=None):
@@ -826,12 +870,15 @@ class MultiTemporalImageBase(object):
             pygeobase.object_base.Image object
         """
         filepath = self._build_filename(timestamp, **kwargs)
-        self._open(filepath, **kwargs)
-        kwargs['timestamp'] = timestamp
-        if mask is False:
-            img = self.fid.read(**kwargs)
-        else:
-            img = self.fid.read_masked_data(**kwargs)
+        img = None
+
+        if self._open(filepath, **kwargs):
+            kwargs['timestamp'] = timestamp
+            if mask is False:
+                img = self.fid.read(**kwargs)
+            else:
+                img = self.fid.read_masked_data(**kwargs)
+
         return img
 
     def read(self, timestamp, **kwargs):
@@ -863,6 +910,7 @@ class MultiTemporalImageBase(object):
         """
         if self.mode in ['r']:
             raise IOError("File is not open in write/append mode")
+
         filename = self._build_filename(timestamp)
 
         self.fid.write(filename, data, **kwargs)
@@ -885,6 +933,7 @@ class MultiTemporalImageBase(object):
         StartPos = self.fname_templ.find(self.dtime_placeholder) - 1
         EndPos = StartPos + len(datetime.now().strftime(self.datetime_format))
         StringDate = filename[StartPos:EndPos]
+
         return datetime.strptime(StringDate, self.datetime_format)
 
     def tstamps_for_daterange(self, start_date, end_date):
