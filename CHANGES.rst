@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.3.5
+=============
+
+- Remove unnecessary dependencies and improve documentation.
+
 Version 0.3.4
 =============
 
