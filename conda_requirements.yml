@@ -17,7 +17,6 @@ dependencies:
 - numpydoc=0.5=py27_1
 - openblas=0.2.14=3
 - openssl=1.0.2f=0
-- pandas=0.17.1=np110py27_0
 - pbr=1.8.0=py27_0
 - pip=8.0.2=py27_0
 - py=1.4.31=py27_0
