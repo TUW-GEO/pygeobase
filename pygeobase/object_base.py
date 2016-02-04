@@ -25,14 +25,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import pandas as pd
-import numpy as np
-
 
 class TS(object):
     """
     The TS class represents the base object of a time series.
     """
+
     def __init__(self, gpi, lon, lat, data, metadata):
         """
         Initialization of the time series object.
@@ -81,6 +79,7 @@ class Image(object):
     """
     The Image class represents the base object of an image.
     """
+
     def __init__(self, lon, lat, data, metadata, timestamp, timekey='jd'):
         """
         Initialization of the image object.
