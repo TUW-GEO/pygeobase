@@ -436,8 +436,8 @@ class GriddedBase(object):
     def write(self, *args, **kwargs):
         """
         Takes either 1 or 2 arguments and calls the correct function
-        which is either reading the gpi directly or finding
-        the nearest gpi from given lat,lon coordinates and then reading it
+        which is either writing the gpi directly or finding
+        the nearest gpi from given lat,lon coordinates and then writing it.
         """
         if len(args) == 1:
             # args: data
