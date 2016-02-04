@@ -705,7 +705,6 @@ class MultiTemporalImageBase(object):
         self.close()
         self.fid = self.ioclass(filepath, mode=self.mode, **self.ioclass_kws)
 
-
     def _search_files(self, timestamp, custom_templ=None, str_param=None,
                       custom_datetime_format=None):
         """
@@ -755,7 +754,7 @@ class MultiTemporalImageBase(object):
         sub_path = ''
         if self.subpath_templ is not None:
             for s in self.subpath_templ:
-                 sub_path = os.path.join(sub_path, timestamp.strftime(s))
+                sub_path = os.path.join(sub_path, timestamp.strftime(s))
 
         search_file = os.path.join(self.path, sub_path,
                                    timestamp.strftime(fname_templ))
@@ -887,7 +886,6 @@ class MultiTemporalImageBase(object):
         EndPos = StartPos + len(datetime.now().strftime(self.datetime_format))
         StringDate = filename[StartPos:EndPos]
         return datetime.strptime(StringDate, self.datetime_format)
-
 
     def tstamps_for_daterange(self, start_date, end_date):
         """
