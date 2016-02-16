@@ -489,7 +489,8 @@ class GriddedBase(object):
             raise IOError("File is not open in write/append mode")
 
         if self._open(gp):
-            self.fid.write(gp, data, **kwargs)
+            lon, lat = self.grid.gpi2lonlat(gp)
+            self.fid.write(gp, data, lon=lon, lat=lat, **kwargs)
 
     def iter_gp(self):
         """
