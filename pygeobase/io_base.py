@@ -347,7 +347,7 @@ class GriddedBase(object):
         success : boolean
             Flag if opening the file was successful.
         """
-        success = False
+        success = True
         cell = self.grid.gpi2cell(gp)
         filename = os.path.join(self.path, self.fn_format.format(cell))
 
@@ -359,8 +359,8 @@ class GriddedBase(object):
                 try:
                     self.fid = self.ioclass(filename, mode=self.mode,
                                             **self.ioclass_kws)
-                    success = True
                 except IOError as e:
+                    success = False
                     self.fid = None
                     warnings.warns("I/O error({0}): {1}".format(e.errno, e.strerror),
                                    RuntimeWarning)
@@ -373,8 +373,8 @@ class GriddedBase(object):
                 try:
                     self.fid = self.ioclass(filename, mode=self.mode,
                                             **self.ioclass_kws)
-                    success = True
                 except IOError as e:
+                    success = False
                     self.fid = None
                     warnings.warns("I/O error({0}): {1}".format(e.errno, e.strerror),
                                    RuntimeWarning)
@@ -734,15 +734,15 @@ class MultiTemporalImageBase(object):
         success : boolean
             Flag if opening the file was successful.
         """
-        success = False
+        success = True
         self.close()
 
         try:
             self.fid = self.ioclass(filepath, mode=self.mode,
                                     **self.ioclass_kws)
-            success = True
         except IOError as e:
             self.fid = None
+            success = False
             warnings.warns("I/O error({0}): {1}".format(e.errno, e.strerror),
                            RuntimeWarning)
 
