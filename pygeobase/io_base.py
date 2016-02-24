@@ -362,8 +362,8 @@ class GriddedBase(object):
                 except IOError as e:
                     success = False
                     self.fid = None
-                    warnings.warns("I/O error({0}): {1}".format(e.errno, e.strerror),
-                                   RuntimeWarning)
+                    warnings.warn("I/O error({0}): {1}".format(e.errno, e.strerror),
+                                  RuntimeWarning)
 
         if self.mode in ['w', 'a']:
             if self.previous_cell != cell:
@@ -376,8 +376,8 @@ class GriddedBase(object):
                 except IOError as e:
                     success = False
                     self.fid = None
-                    warnings.warns("I/O error({0}): {1}".format(e.errno, e.strerror),
-                                   RuntimeWarning)
+                    warnings.warn("I/O error({0}): {1}".format(e.errno, e.strerror),
+                                  RuntimeWarning)
         return success
 
     def _read_lonlat(self, lon, lat, **kwargs):
@@ -743,8 +743,8 @@ class MultiTemporalImageBase(object):
         except IOError as e:
             self.fid = None
             success = False
-            warnings.warns("I/O error({0}): {1}".format(e.errno, e.strerror),
-                           RuntimeWarning)
+            warnings.warn("I/O error({0}): {1}".format(e.errno, e.strerror),
+                          RuntimeWarning)
 
         return success
 
