@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.3.7
+=============
+
+- Fix issue #28, reading from non-existing cell
+
 Version 0.3.6
 =============
 
