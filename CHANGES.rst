@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Version 0.3.6
+=============
+
+- Add exception handling for opening a files
+- Add lon, lat information in writing operation of GriddedBase
+
 Version 0.3.5
 =============
 
