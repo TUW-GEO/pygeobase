@@ -9,6 +9,7 @@ class TestDataset(object):
     def __init__(self, filename, mode='r'):
         self.filename = filename
         self.mode = mode
+        open(filename, mode)
 
     def read(self, gpi):
         return None
@@ -32,10 +33,10 @@ class TestDataset(object):
 def test_gridded_ts_base_iter_ts():
     """Test iteration over time series in GriddedTsBase."""
     grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
-                          np.array([4, 3, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
 
     ds = GriddedTsBase("", grid, TestDataset)
     # during iteration the gpis are traversed based on cells for a cell grid
-    gpi_should = [4, 3, 2, 1]
+    gpi_should = [4, 3, 1, 2]
     for ts, gpi in ds.iter_ts():
         assert gpi == gpi_should.pop(0)

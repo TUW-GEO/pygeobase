@@ -354,11 +354,11 @@ class GriddedBase(object):
         if self.mode == 'r':
             if self.previous_cell != cell:
                 self.close()
-                self.previous_cell = cell
 
                 try:
                     self.fid = self.ioclass(filename, mode=self.mode,
                                             **self.ioclass_kws)
+                    self.previous_cell = cell
                 except IOError as e:
                     success = False
                     self.fid = None
@@ -369,10 +369,10 @@ class GriddedBase(object):
             if self.previous_cell != cell:
                 self.flush()
                 self.close()
-                self.previous_cell = cell
                 try:
                     self.fid = self.ioclass(filename, mode=self.mode,
                                             **self.ioclass_kws)
+                    self.previous_cell = cell
                 except IOError as e:
                     success = False
                     self.fid = None
