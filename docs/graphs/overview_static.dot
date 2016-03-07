@@ -6,15 +6,16 @@ digraph G {
                 node [style="filled",fontname="Hack" ,shape=record] //All nodes will this shape and colour
                 edge [color=Gray, fontname="Hack"] //All the lines look like this
               
-                TsBase [
-                label = "{TsBase| + read_ts(gpi) \l + write_ts(gpi, data) \l}"
+                StaticBase [
+                label = "{StaticBase|+ read(gpi) \l + write(data) \l + flush()\l + close()\l}"
                 ]
 
-                GriddedTsBase [
-                label = "{GriddedTsBase| + __init__(path, 
+                GriddedBase [
+                label = "{GriddedBase| + __init__(path, 
                                                   grid, ioclass)  \l}"
                 ]
 
-                {TsBase}->GriddedTsBase [label="ioclass \l"]
+                {StaticBase}->GriddedBase [label="ioclass \l"]
+
 
 }
