@@ -257,4 +257,5 @@ intersphinx_mapping = {
     'sklearn': ('http://scikit-learn.org/stable', None),
     'pandas': ('http://pandas.pydata.org/pandas-docs/stable', None),
     'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
+    'pygeogrids': ('http://pygeogrids.readthedocs.org/en/latest/', None),
 }

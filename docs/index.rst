@@ -113,7 +113,8 @@ that reads one of these files:
 
 This new class ``PickleImg`` will read a pickled dictionary of data from the
 given filename. For the representation of the longitude and latitude of each
-datapoint ``pygeogrids`` can be used but a regular numpy array would also do.
+datapoint the attributes of a :class:`pygeogrids.grids.BasicGrid` object can be
+used but a regular numpy array would also do.
 
 The next code snippet shows how this newly written class can be used in an
 implementation of :class:`pygeobase.io_base.MultiTemporalImageBase`:
