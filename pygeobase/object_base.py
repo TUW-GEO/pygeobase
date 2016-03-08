@@ -29,23 +29,24 @@
 class TS(object):
     """
     The TS class represents the base object of a time series.
+
+    Parameters
+    ----------
+    lon : float
+        Longitude of the time series
+    lat : float
+        Latitude of the time series
+    data : pandas.DataFrame
+        Pandas DataFrame that holds data for each variable of the time
+        series
+    metadata : dict
+        dictionary that holds metadata
     """
 
     def __init__(self, gpi, lon, lat, data, metadata):
         """
         Initialization of the time series object.
 
-        Parameters
-        ----------
-        lon : float
-            Longitude of the time series
-        lat : float
-            Latitude of the time series
-        data : pandas.DataFrame
-            Pandas DataFrame that holds data for each variable of the time
-            series
-        metadata : dict
-            dictionary that holds metadata
         """
         self.gpi = gpi
         self.lon = lon
@@ -78,28 +79,29 @@ class TS(object):
 class Image(object):
     """
     The Image class represents the base object of an image.
+
+    Parameters
+    ----------
+    lon : numpy.array
+        array of longitudes
+    lat : numpy.array
+        array of latitudes
+    data : dict
+        dictionary of numpy arrays that holds the image data for each
+        variable of the dataset
+    metadata : dict
+        dictionary that holds metadata
+    timestamp : datetime.datetime
+        exact timestamp of the image
+    timekey : str, optional
+        Key of the time variable, if available, stored in data dictionary.
     """
 
     def __init__(self, lon, lat, data, metadata, timestamp, timekey='jd'):
         """
         Initialization of the image object.
-
-        Parameters
-        ----------
-        lon : numpy.array
-            array of longitudes
-        lat : numpy.array
-            array of latitudes
-        data : dict
-            dictionary of numpy arrays that holds the image data for each
-            variable of the dataset
-        metadata : dict
-            dictionary that holds metadata
-        timestamp : datetime.datetime
-            exact timestamp of the image
-        timekey : str, optional
-            Key of the time variable, if available, stored in data dictionary.
         """
+
         self.lon = lon
         self.lat = lat
         self.data = data
