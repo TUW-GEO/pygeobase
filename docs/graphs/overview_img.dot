@@ -7,7 +7,7 @@ digraph G {
                 edge [color=Gray, fontname="Hack"] //All the lines look like this
               
                 ImageBase [
-                label = "{ImageBase| + read() \l + write(image) \l + flush()\l + close()\l}"
+                label = "{ImageBase|+ __init__(filename, mode) \l + read() \l + write(image) \l + flush()\l + close()\l}"
                 ]
 
                 MultiTemporalImageBase [
