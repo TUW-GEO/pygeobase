@@ -80,7 +80,7 @@ class Image(object):
     The Image class represents the base object of an image.
     """
 
-    def __init__(self, lon, lat, data, metadata, timestamp, timekey='jd'):
+    def __init__(self, lon, lat, data, metadata, timestamp, timekey=None):
         """
         Initialization of the image object.
 
@@ -106,3 +106,16 @@ class Image(object):
         self.metadata = metadata
         self.timestamp = timestamp
         self.timekey = timekey
+
+    def __iter__(self):
+        l = [self.data, self.metadata,
+             self.timestamp, self.lon,
+             self.lat]
+
+        if self.timekey is not None:
+            l.append(self.data[self.timekey])
+        else:
+            l.append(None)
+
+        for attr in l:
+            yield attr
