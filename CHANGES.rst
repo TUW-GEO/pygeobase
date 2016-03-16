@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Version 0.3.8
+=============
+
+- Make the Image object backward compatible.
+- Improve documentation.
+
 Version 0.3.7
 =============
 
