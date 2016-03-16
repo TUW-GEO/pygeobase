@@ -39,19 +39,19 @@ class StaticBase(object):
     """
     The StaticBase class serves as a template for i/o objects used in
     GriddedStaticBase.
+
+    Parameters
+    ----------
+    filename : str
+        File name.
+    mode : str, optional
+        Opening mode. Default: r
     """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, filename, mode='r', **kwargs):
         """
         Initialization of i/o object.
-
-        Parameters
-        ----------
-        filename : str
-            File name.
-        mode : str, optional
-            Opening mode. Default: r
         """
         self.filename = filename
         self.mode = mode
@@ -106,19 +106,19 @@ class TsBase(object):
     """
     The TsBase class serves as a template for i/o objects used in
     GriddedTsBase.
+
+    Parameters
+    ----------
+    filename : str
+        File name.
+    mode : str, optional
+        Opening mode. Default: r
     """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self, filename, mode='r', **kwargs):
         """
         Initialization of i/o object.
-
-        Parameters
-        ----------
-        filename : str
-            File name.
-        mode : str, optional
-            Opening mode. Default: r
         """
         self.filename = filename
         self.mode = mode
@@ -173,6 +173,14 @@ class ImageBase(object):
     """
     ImageBase class serves as a template for i/o objects used for reading
     and writing image data.
+
+    Parameters
+    ----------
+    filename : str
+        Filename path.
+    mode : str, optional
+        Opening mode. Default: r
+
     """
     __metaclass__ = abc.ABCMeta
 
@@ -180,12 +188,6 @@ class ImageBase(object):
         """
         Initialization of i/o object.
 
-        Parameters
-        ----------
-        filename : str
-            Filename path.
-        mode : str, optional
-            Opening mode. Default: r
         """
         self.filename = filename
         self.mode = mode

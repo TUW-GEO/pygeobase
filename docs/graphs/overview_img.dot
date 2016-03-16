@@ -1,0 +1,19 @@
+digraph G {
+                resolution=100
+                rankdir=UD
+                bgcolor=Transparent
+              
+                node [style="filled",fontname="Hack" ,shape=record] //All nodes will this shape and colour
+                edge [color=Gray, fontname="Hack"] //All the lines look like this
+              
+                ImageBase [
+                label = "{ImageBase|+ __init__(filename, mode) \l + read() \l + write(image) \l + flush()\l + close()\l}"
+                ]
+
+                MultiTemporalImageBase [
+                label = "{MultiTemporalImageBase| + __init__(path, ioclass)  \l + read(timestamp) \l + write(timestamp, data) \l}"
+                ]
+
+                {ImageBase}->MultiTemporalImageBase [label="ioclass \l"]
+
+}

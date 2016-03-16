@@ -1,0 +1,21 @@
+digraph G {
+                resolution=100
+                rankdir=UD
+                bgcolor=Transparent
+              
+                node [style="filled",fontname="Hack" ,shape=record] //All nodes will this shape and colour
+                edge [color=Gray, fontname="Hack"] //All the lines look like this
+              
+                StaticBase [
+                label = "{StaticBase|+ read(gpi) \l + write(data) \l + flush()\l + close()\l}"
+                ]
+
+                GriddedBase [
+                label = "{GriddedBase| + __init__(path, 
+                                                  grid, ioclass)  \l}"
+                ]
+
+                {StaticBase}->GriddedBase [label="ioclass \l"]
+
+
+}

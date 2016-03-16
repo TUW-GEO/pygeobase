@@ -1,0 +1,80 @@
+#+begin_src dot :file ./overview_static.svg :cmdline -Kdot -Tsvg :tangle overview_static.dot
+  digraph G {
+                  resolution=100
+                  rankdir=UD
+                  bgcolor=Transparent
+                
+                  node [style="filled",fontname="Hack" ,shape=record] //All nodes will this shape and colour
+                  edge [color=Gray, fontname="Hack"] //All the lines look like this
+                
+                  StaticBase [
+                  label = "{StaticBase|+ read(gpi) \l + write(data) \l + flush()\l + close()\l}"
+                  ]
+
+                  GriddedBase [
+                  label = "{GriddedBase| + __init__(path, 
+                                                    grid, ioclass)  \l}"
+                  ]
+
+                  {StaticBase}->GriddedBase [label="ioclass \l"]
+
+
+  }
+#+end_src
+
+#+RESULTS:
+[[file:./overview_static.svg]]
+
+
+#+begin_src dot :file ./overview_ts.svg :cmdline -Kdot -Tsvg :tangle overview_ts.dot
+  digraph G {
+                  resolution=100
+                  rankdir=UD
+                  bgcolor=Transparent
+                
+                  node [style="filled",fontname="Hack" ,shape=record] //All nodes will this shape and colour
+                  edge [color=Gray, fontname="Hack"] //All the lines look like this
+                
+                  TsBase [
+                  label = "{TsBase| + read_ts(gpi) \l + write_ts(gpi, data) \l}"
+                  ]
+
+                  GriddedTsBase [
+                  label = "{GriddedTsBase| + __init__(path, 
+                                                    grid, ioclass)  \l}"
+                  ]
+
+                  {TsBase}->GriddedTsBase [label="ioclass \l"]
+
+  }
+#+end_src
+
+#+RESULTS:
+[[file:./overview_ts.svg]]
+
+
+#+begin_src dot :file ./overview_img.svg :cmdline -Kdot -Tsvg :tangle overview_img.dot
+  digraph G {
+                  resolution=100
+                  rankdir=UD
+                  bgcolor=Transparent
+                
+                  node [style="filled",fontname="Hack" ,shape=record] //All nodes will this shape and colour
+                  edge [color=Gray, fontname="Hack"] //All the lines look like this
+                
+                  ImageBase [
+                  label = "{ImageBase|+ __init__(filename, mode) \l + read() \l + write(image) \l + flush()\l + close()\l}"
+                  ]
+
+                  MultiTemporalImageBase [
+                  label = "{MultiTemporalImageBase| + __init__(path, ioclass)  \l + read(timestamp) \l + write(timestamp, data) \l}"
+                  ]
+
+                  {ImageBase}->MultiTemporalImageBase [label="ioclass \l"]
+
+  }
+#+end_src
+
+#+RESULTS:
+[[file:./overview_img.svg]]
+
