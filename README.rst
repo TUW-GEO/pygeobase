@@ -7,6 +7,13 @@ The pygeobase package implements base class definitions for the I/O interface us
 .. _pytesmo: https://github.com/TUW-GEO/pytesmo
 .. _pynetCF: https://github.com/TUW-GEO/pynetCF
 
+Documentation
+=============
+
+.. image:: https://readthedocs.org/projects/pygeobase/badge/?version=latest
+   :target: http://pygeobase.readthedocs.org/en/latest/?badge=latest
+   :alt: Documentation Status
+
 Installation
 ============
 
