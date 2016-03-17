@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.3.9
+=============
+
+- Fix bug in passing of keyword arguments to Image readers.
+
 Version 0.3.8
 =============
 
