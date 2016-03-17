@@ -870,10 +870,10 @@ class MultiTemporalImageBase(object):
         img: object
             pygeobase.object_base.Image object
         """
-        filepath = self._build_filename(timestamp, **kwargs)
+        filepath = self._build_filename(timestamp)
         img = None
 
-        if self._open(filepath, **kwargs):
+        if self._open(filepath):
             kwargs['timestamp'] = timestamp
             if mask is False:
                 img = self.fid.read(**kwargs)
