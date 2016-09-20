@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.3.10
+==============
+
+- allow iteration over time series to take keyword arguments.
+
 Version 0.3.9
 =============
 

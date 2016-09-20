@@ -13,16 +13,15 @@ class TestDataset(object):
     def __init__(self, filename, mode='r'):
         self.filename = filename
         self.mode = mode
-        open(filename, mode)
 
-    def read(self, gpi):
-        return None
+    def read(self, gpi, factor=1):
+        return gpi * factor
 
     def write(self, gpi, data):
         return None
 
-    def read_ts(self, gpi):
-        return None
+    def read_ts(self, gpi, factor=1):
+        return gpi * factor
 
     def write_ts(self, gpi, data):
         return None
@@ -44,6 +43,20 @@ def test_gridded_ts_base_iter_ts():
     gpi_should = [4, 3, 1, 2]
     for ts, gpi in ds.iter_ts():
         assert gpi == gpi_should.pop(0)
+
+
+def test_gridded_ts_base_iter_ts_kwargs():
+    """Test iteration over time series in GriddedTsBase."""
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+
+    ds = GriddedTsBase("", grid, TestDataset)
+    # during iteration the gpis are traversed based on cells for a cell grid
+    gpi_should = [4, 3, 1, 2]
+    ts_should = [4, 3, 1, 2]
+    for ts, gpi in ds.iter_ts(factor=2):
+        assert gpi == gpi_should.pop(0)
+        assert ts == ts_should.pop(0) * 2
 
 
 class TestImageDataset(ImageBase):

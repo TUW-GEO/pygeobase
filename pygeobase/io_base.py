@@ -494,7 +494,7 @@ class GriddedBase(object):
             lon, lat = self.grid.gpi2lonlat(gp)
             self.fid.write(gp, data, lon=lon, lat=lat, **kwargs)
 
-    def iter_gp(self):
+    def iter_gp(self, **kwargs):
         """
         Yield all values for all grid points.
 
@@ -509,7 +509,7 @@ class GriddedBase(object):
         gps = np.array(gp_info, dtype=np.int)[:, 0]
 
         for gp in gps:
-            yield self._read_gp(gp), gp
+            yield self._read_gp(gp, **kwargs), gp
 
     def flush(self):
         """
@@ -608,7 +608,7 @@ class GriddedTsBase(GriddedBase):
                       "instead.", DeprecationWarning)
         return self.write(*args, **kwargs)
 
-    def iter_ts(self):
+    def iter_ts(self, **kwargs):
         """
         Yield time series for all grid points.
         Yields
@@ -620,7 +620,7 @@ class GriddedTsBase(GriddedBase):
         """
         warnings.warn("iter_ts is deprecated, please use iter_gp "
                       "instead.", DeprecationWarning)
-        return self.iter_gp()
+        return self.iter_gp(**kwargs)
 
 
 class MultiTemporalImageBase(object):
