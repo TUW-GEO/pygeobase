@@ -28,8 +28,9 @@
 import os
 import abc
 import glob
-from datetime import datetime
+import copy
 import warnings
+from datetime import datetime
 
 import numpy as np
 
@@ -505,8 +506,19 @@ class GriddedBase(object):
         gp : int
             Grid point.
         """
-        gp_info = list(self.grid.grid_points())
-        gps = np.array(gp_info, dtype=np.int)[:, 0]
+        if 'll_bbox' in kwargs:
+            latmin, latmax, lonmin, lonmax = kwargs['ll_bbox']
+            gps = self.grid.get_bbox_grid_points(latmin, latmax,
+                                                 lonmin, lonmax)
+            kwargs.pop('ll_bbox', None)
+        elif 'gpis' in kwargs:
+            subgrid = self.grid.subgrid_from_gpis(kwargs['gpis'])
+            gp_info = list(subgrid.grid_points())
+            gps = np.array(gp_info, dtype=np.int)[:, 0]
+            kwargs.pop('gpis', None)
+        else:
+            gp_info = list(self.grid.grid_points())
+            gps = np.array(gp_info, dtype=np.int)[:, 0]
 
         for gp in gps:
             yield self._read_gp(gp, **kwargs), gp
