@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Vienna University of Technology, Department of Geodesy
+# Copyright (c) 2016, Vienna University of Technology, Department of Geodesy
 # and Geoinformation. All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -22,14 +22,15 @@
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 # LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import abc
 import glob
-from datetime import datetime
+import copy
 import warnings
+from datetime import datetime
 
 import numpy as np
 
@@ -364,8 +365,8 @@ class GriddedBase(object):
                 except IOError as e:
                     success = False
                     self.fid = None
-                    warnings.warn("I/O error({0}): {1}".format(e.errno, e.strerror),
-                                  RuntimeWarning)
+                    msg = "I/O error({0}): {1}".format(e.errno, e.strerror)
+                    warnings.warn(msg, RuntimeWarning)
 
         if self.mode in ['w', 'a']:
             if self.previous_cell != cell:
@@ -378,8 +379,8 @@ class GriddedBase(object):
                 except IOError as e:
                     success = False
                     self.fid = None
-                    warnings.warn("I/O error({0}): {1}".format(e.errno, e.strerror),
-                                  RuntimeWarning)
+                    msg = "I/O error({0}): {1}".format(e.errno, e.strerror),
+                    warnings.warn(msg, RuntimeWarning)
         return success
 
     def _read_lonlat(self, lon, lat, **kwargs):
@@ -505,8 +506,19 @@ class GriddedBase(object):
         gp : int
             Grid point.
         """
-        gp_info = list(self.grid.grid_points())
-        gps = np.array(gp_info, dtype=np.int)[:, 0]
+        if 'll_bbox' in kwargs:
+            latmin, latmax, lonmin, lonmax = kwargs['ll_bbox']
+            gps = self.grid.get_bbox_grid_points(latmin, latmax,
+                                                 lonmin, lonmax)
+            kwargs.pop('ll_bbox', None)
+        elif 'gpis' in kwargs:
+            subgrid = self.grid.subgrid_from_gpis(kwargs['gpis'])
+            gp_info = list(subgrid.grid_points())
+            gps = np.array(gp_info, dtype=np.int)[:, 0]
+            kwargs.pop('gpis', None)
+        else:
+            gp_info = list(self.grid.grid_points())
+            gps = np.array(gp_info, dtype=np.int)[:, 0]
 
         for gp in gps:
             yield self._read_gp(gp, **kwargs), gp
@@ -525,6 +537,47 @@ class GriddedBase(object):
         if self.fid is not None:
             self.fid.close()
             self.fid = None
+
+    def get_spatial_subset(self, gpis=None, cells=None, ll_bbox=None,
+                           grid=None):
+        """
+        Select spatial subset and return data set with new grid.
+
+        Parameters
+        ----------
+        gpis : numpy.ndarray
+            Grid point indices.
+        cells : numpy.ndarray
+            Cell number.
+        ll_bbox : tuple (latmin, latmax, lonmin, lonmax)
+            Lat/Lon bounding box 
+        grid : pygeogrids.CellGrid
+            Grid object.
+
+        Returns
+        -------
+        dataset : GriddedBase or child
+            New data set with for spatial subset.
+        """
+        if gpis:
+            new_grid = self.grid.subgrid_from_gpis(gpis)
+
+        if cells:
+            new_grid = self.grid.subgrid_from_cells(cells)
+
+        if ll_bbox:
+            latmin, latmax, lonmin, lonmax = ll_bbox
+            gps = self.grid.get_bbox_grid_points(latmin, latmax,
+                                                 lonmin, lonmax)
+            new_grid = self.grid.subgrid_from_gpis(gps)
+
+        if grid:
+            new_grid = grid
+
+        dataset = copy.deepcopy(self)
+        dataset.grid = new_grid
+
+        return dataset
 
 
 class GriddedStaticBase(GriddedBase):

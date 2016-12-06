@@ -1,14 +1,47 @@
-import pygeogrids.grids as grids
+# Copyright (c) 2016, Vienna University of Technology, Department of Geodesy
+# and Geoinformation. All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#   * Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#   * Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#   * Neither the name of the Vienna University of Technology, Department of
+#     Geodesy and Geoinformation nor the names of its contributors may be
+#     used to endorse or promote products derived from this software without
+#     specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
+# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import numpy as np
 from datetime import datetime
+
+from pygeobase.io_base import GriddedBase
 from pygeobase.io_base import GriddedTsBase
 from pygeobase.io_base import ImageBase
 from pygeobase.io_base import MultiTemporalImageBase
 from pygeobase.object_base import Image
 
+import pygeogrids.grids as grids
+
 
 class TestDataset(object):
-    """Test dataset that acts as a fake object for the base classes."""
+
+    """
+    Test dataset that acts as a fake object for the base classes.
+    """
 
     def __init__(self, filename, mode='r'):
         self.filename = filename
@@ -34,7 +67,9 @@ class TestDataset(object):
 
 
 def test_gridded_ts_base_iter_ts():
-    """Test iteration over time series in GriddedTsBase."""
+    """
+    Test iteration over time series in GriddedTsBase.
+    """
     grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
                           np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
 
@@ -46,7 +81,9 @@ def test_gridded_ts_base_iter_ts():
 
 
 def test_gridded_ts_base_iter_ts_kwargs():
-    """Test iteration over time series in GriddedTsBase."""
+    """
+    Test iteration over time series in GriddedTsBase.
+    """
     grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
                           np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
 
@@ -57,6 +94,38 @@ def test_gridded_ts_base_iter_ts_kwargs():
     for ts, gpi in ds.iter_ts(factor=2):
         assert gpi == gpi_should.pop(0)
         assert ts == ts_should.pop(0) * 2
+
+
+def test_gridded_base_spatial_subset():
+    """
+    Test selection of spatial subset.
+    """
+    lons = np.arange(4)
+    lats = np.arange(4)
+    cells = np.array([4, 4, 2, 1])
+    gpis = np.arange(4)
+
+    grid = grids.CellGrid(lons, lats, cells,  gpis=gpis)
+    ds = GriddedBase("", grid, TestDataset)
+
+    # gpi subset
+    new_ds = ds.get_spatial_subset(gpis=[1, 2, 3])
+    np.testing.assert_array_equal(new_ds.grid.gpis, gpis[1:])
+
+    # cell subset
+    new_ds = ds.get_spatial_subset(cells=[4])
+    np.testing.assert_array_equal(new_ds.grid.gpis, gpis[:2])
+
+    # ll_bbox subset
+    ll_bbox = (0, 2, 0, 2)
+    new_ds = ds.get_spatial_subset(ll_bbox=ll_bbox)
+    np.testing.assert_array_equal(new_ds.grid.gpis, gpis[:3])
+
+    # grid subset
+    new_grid = grids.CellGrid(lons[2:], lats[2:],
+                              cells[2:],  gpis=gpis[2:])
+    new_ds = ds.get_spatial_subset(grid=new_grid)
+    np.testing.assert_array_equal(new_ds.grid.gpis, new_grid.gpis)
 
 
 class TestImageDataset(ImageBase):
@@ -83,6 +152,9 @@ class TestMultiTemporalImageDataset(MultiTemporalImageBase):
 
 
 def test_multi_temp_dataset():
+    """
+    Test multi-temporal data sets.
+    """
     ds = TestMultiTemporalImageDataset()
 
     data = ds.read(datetime(2000, 1, 1))
@@ -93,6 +165,9 @@ def test_multi_temp_dataset():
 
 
 def test_multi_temp_dataset_kw_passing():
+    """
+    Test keyword pass of multi-temporal data sets.
+    """
     ds = TestMultiTemporalImageDataset()
 
     data = ds.read(datetime(2000, 1, 1), additional_kw="test")
