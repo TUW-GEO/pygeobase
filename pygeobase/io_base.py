@@ -1,4 +1,4 @@
-# Copyright (c) 2015, Vienna University of Technology, Department of Geodesy
+# Copyright (c) 2016, Vienna University of Technology, Department of Geodesy
 # and Geoinformation. All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -22,8 +22,8 @@
 # (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
 # LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import abc
@@ -364,8 +364,8 @@ class GriddedBase(object):
                 except IOError as e:
                     success = False
                     self.fid = None
-                    warnings.warn("I/O error({0}): {1}".format(e.errno, e.strerror),
-                                  RuntimeWarning)
+                    msg = "I/O error({0}): {1}".format(e.errno, e.strerror)
+                    warnings.warn(msg, RuntimeWarning)
 
         if self.mode in ['w', 'a']:
             if self.previous_cell != cell:
@@ -378,8 +378,8 @@ class GriddedBase(object):
                 except IOError as e:
                     success = False
                     self.fid = None
-                    warnings.warn("I/O error({0}): {1}".format(e.errno, e.strerror),
-                                  RuntimeWarning)
+                    msg = "I/O error({0}): {1}".format(e.errno, e.strerror),
+                    warnings.warn(msg, RuntimeWarning)
         return success
 
     def _read_lonlat(self, lon, lat, **kwargs):
