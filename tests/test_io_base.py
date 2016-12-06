@@ -1,11 +1,13 @@
 import pygeogrids.grids as grids
 import numpy as np
 from datetime import datetime
+from pygeobase.io_base import GriddedBase
 from pygeobase.io_base import GriddedTsBase
 from pygeobase.io_base import ImageBase
 from pygeobase.io_base import MultiTemporalImageBase
 from pygeobase.object_base import Image
 
+import pygeogrids.grids as grids
 
 class TestDataset(object):
     """Test dataset that acts as a fake object for the base classes."""
@@ -57,6 +59,38 @@ def test_gridded_ts_base_iter_ts_kwargs():
     for ts, gpi in ds.iter_ts(factor=2):
         assert gpi == gpi_should.pop(0)
         assert ts == ts_should.pop(0) * 2
+
+
+def test_gridded_base_spatial_subset():
+    """
+    Test selection of spatial subset.
+    """
+    lons = np.arange(4)
+    lats = np.arange(4)
+    cells = np.array([4, 4, 2, 1])
+    gpis = np.arange(4)
+
+    grid = grids.CellGrid(lons, lats, cells,  gpis=gpis)
+    ds = GriddedBase("", grid, TestDataset)
+
+    # gpi subset
+    new_ds = ds.get_spatial_subset(gpis=[1, 2, 3])
+    np.testing.assert_array_equal(new_ds.grid.gpis, gpis[1:])
+
+    # cell subset
+    new_ds = ds.get_spatial_subset(cells=[4])
+    np.testing.assert_array_equal(new_ds.grid.gpis, gpis[:2])
+
+    # ll_bbox subset
+    ll_bbox = (0, 2, 0, 2)
+    new_ds = ds.get_spatial_subset(ll_bbox=ll_bbox)
+    np.testing.assert_array_equal(new_ds.grid.gpis, gpis[:3])
+
+    # grid subset
+    new_grid = grids.CellGrid(lons[2:], lats[2:],
+                              cells[2:],  gpis=gpis[2:])
+    new_ds = ds.get_spatial_subset(grid=new_grid)
+    np.testing.assert_array_equal(new_ds.grid.gpis, new_grid.gpis)
 
 
 class TestImageDataset(ImageBase):

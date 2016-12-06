@@ -538,6 +538,47 @@ class GriddedBase(object):
             self.fid.close()
             self.fid = None
 
+    def get_spatial_subset(self, gpis=None, cells=None, ll_bbox=None,
+                           grid=None):
+        """
+        Select spatial subset and return data set with new grid.
+
+        Parameters
+        ----------
+        gpis : numpy.ndarray
+            Grid point indices.
+        cells : numpy.ndarray
+            Cell number.
+        ll_bbox : tuple (latmin, latmax, lonmin, lonmax)
+            Lat/Lon bounding box 
+        grid : pygeogrids.CellGrid
+            Grid object.
+
+        Returns
+        -------
+        dataset : GriddedBase or child
+            New data set with for spatial subset.
+        """
+        if gpis:
+            new_grid = self.grid.subgrid_from_gpis(gpis)
+
+        if cells:
+            new_grid = self.grid.subgrid_from_cells(cells)
+
+        if ll_bbox:
+            latmin, latmax, lonmin, lonmax = ll_bbox
+            gps = self.grid.get_bbox_grid_points(latmin, latmax,
+                                                 lonmin, lonmax)
+            new_grid = self.grid.subgrid_from_gpis(gps)
+
+        if grid:
+            new_grid = grid
+
+        dataset = copy.deepcopy(self)
+        dataset.grid = new_grid
+
+        return dataset
+
 
 class GriddedStaticBase(GriddedBase):
 
