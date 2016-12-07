@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.3.11
+==============
+
+- Fix issue 10 and add new spatial subset method
+
 Version 0.3.10
 ==============
 
