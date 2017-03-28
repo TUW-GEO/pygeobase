@@ -132,7 +132,7 @@ class Image(object):
         numpy array.
         """
         dtype_list = []
-        for key in list(self.data.iterkeys()):
+        for key in self.data:
             dtype_list.append((key, self.data[key].dtype.type))
 
         return np.dtype(dtype_list)
