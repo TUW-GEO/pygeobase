@@ -218,30 +218,49 @@ class ImageBase(object):
         """
         raise NotImplementedError('Please implement to enable.')
 
-    def resample_data(self, image, index, distance, windowRadius, **kwargs):
+    def resample_data(self, image, index, distance, weights, **kwargs):
         """
         Takes an image and resample (interpolate) the image data to
         arbitrary defined locations given by index and distance.
 
+        The default implementation just takes the weighted mean of
+        all defined distances.
+
         Parameters
         ----------
-        image : object
-            pygeobase.object_base.Image object
+        image : :py:class`pygeobase.object_base.Image` or numpy.recarray
+            Image or numpy.recarray like object with shape = (x, )
         index : np.array
             Index into image data defining a look-up table for data elements
             used in the interpolation process for each defined target
-            location.
+            location. For each point in image the neighbors in the targed
+            grid are in the index array. This array is of shape (x, max_neighbors)
         distance : np.array
             Array representing the distances of the image data to the
             arbitrary defined locations.
+            The distances of points not to use are set to np.inf
+            This array is of shape (x, max_neighbors)
+        weights : np.array
+            Array representing the weights of the image data that should be
+            used during resampling.
+            The weights of points not to use are set to np.nan
+            This array is of shape (x, max_neighbors)
 
         Returns
         -------
-        image : object
-            pygeobase.object_base.Image object
+        target : dict
+            dictionary with a numpy.ndarray for each field in
+            the input image. We can not return a image here
+            since we do not know the target latitudes and longitudes.
         """
-        raise NotImplementedError('Please implement to enable spatial '
-                                  'resampling.')
+        total_weights = np.nansum(weights, axis=1)
+
+        target = {}
+        for name in image.dtype.names:
+            target[name] = np.nansum(
+                image[name][index] * weights, axis=1) / total_weights
+
+        return target
 
     @abc.abstractmethod
     def write(self, image, **kwargs):
