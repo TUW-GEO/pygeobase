@@ -136,3 +136,6 @@ class Image(object):
             dtype_list.append((key, self.data[key].dtype.type))
 
         return np.dtype(dtype_list)
+
+    def __getitem__(self, key):
+        return self.data[key]
