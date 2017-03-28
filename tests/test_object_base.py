@@ -65,3 +65,15 @@ def test_dtype_property():
     assert np.dtype([('variable', np.int16), ('jd', np.float32)]) == img.dtype
     assert list(img.dtype.fields) == ['variable', 'jd']
     assert img.dtype.names == ('variable', 'jd')
+
+
+def test_getitem():
+    lon = np.array([1, 2, 3], dtype=np.float32)
+    lat = np.array([1, 2, 3], dtype=np.float32)
+    data = {'variable': np.array([1, 2, 3], dtype=np.int16),
+            'jd': np.array([5, 6, 7], dtype=np.float32)}
+    metadata = {'attribute': 'test'}
+    timestamp = datetime(2000, 1, 1, 12)
+    img = Image(lon, lat, data, metadata, timestamp, timekey='jd')
+    nptest.assert_allclose(img['jd'], data['jd'])
+    nptest.assert_allclose(img['variable'], data['variable'])
