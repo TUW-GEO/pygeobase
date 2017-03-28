@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import numpy as np
+
 
 class TS(object):
     """
@@ -121,3 +123,16 @@ class Image(object):
 
         for attr in l:
             yield attr
+
+    @property
+    def dtype(self):
+        """
+        Fake numpy recarray dtype field based
+        on the dictionary keys and the dtype of the
+        numpy array.
+        """
+        dtype_list = []
+        for key in list(self.data.iterkeys()):
+            dtype_list.append((key, self.data[key].dtype.type))
+
+        return np.dtype(dtype_list)
