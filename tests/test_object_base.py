@@ -62,9 +62,9 @@ def test_dtype_property():
     metadata = {'attribute': 'test'}
     timestamp = datetime(2000, 1, 1, 12)
     img = Image(lon, lat, data, metadata, timestamp, timekey='jd')
-    assert np.dtype([('variable', np.int16), ('jd', np.float32)]) == img.dtype
-    assert list(img.dtype.fields) == ['variable', 'jd']
-    assert img.dtype.names == ('variable', 'jd')
+    assert np.dtype([('jd', np.float32), ('variable', np.int16)]) == img.dtype
+    assert sorted(list(img.dtype.fields)) == ['jd', 'variable']
+    assert img.dtype.names == ('jd', 'variable')
 
 
 def test_getitem():
