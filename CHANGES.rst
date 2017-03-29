@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Version 0.3.12
+==============
+
+- change ``resample_data`` interface to get weights directly instead of windowRadius.
+- Add ``dtype`` and ``__getitem__`` to ``Image`` class.
+
 Version 0.3.11
 ==============
 
