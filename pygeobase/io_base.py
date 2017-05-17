@@ -384,7 +384,9 @@ class GriddedBase(object):
                 except IOError as e:
                     success = False
                     self.fid = None
-                    msg = "I/O error({0}): {1}".format(e.errno, e.strerror)
+                    msg = "I/O error({0}): {1}, {2}".format(e.errno,
+                                                            e.strerror,
+                                                            filename)
                     warnings.warn(msg, RuntimeWarning)
 
         if self.mode in ['w', 'a']:
@@ -398,7 +400,9 @@ class GriddedBase(object):
                 except IOError as e:
                     success = False
                     self.fid = None
-                    msg = "I/O error({0}): {1}".format(e.errno, e.strerror),
+                    msg = "I/O error({0}): {1}, {2}".format(e.errno,
+                                                            e.strerror,
+                                                            filename)
                     warnings.warn(msg, RuntimeWarning)
         return success
 
