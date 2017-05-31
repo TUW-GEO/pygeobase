@@ -26,13 +26,15 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
-from datetime import datetime
+from datetime import datetime, date
 
 from pygeobase.io_base import GriddedBase
 from pygeobase.io_base import GriddedTsBase
 from pygeobase.io_base import ImageBase
 from pygeobase.io_base import MultiTemporalImageBase
+from pygeobase.io_base import IntervalReadingMixin
 from pygeobase.object_base import Image
+from pygeobase.utils import split_daterange_in_intervals
 
 import pygeogrids.grids as grids
 
@@ -132,7 +134,10 @@ class TestImageDataset(ImageBase):
 
     def read(self, timestamp=None, additional_kw=None):
 
-        return Image(None, None, None, {'kw': additional_kw}, timestamp)
+        return Image(np.array([1]), np.array([1]),
+                     {'variable1':  np.array([1])},
+                     {'kw': additional_kw},
+                     timestamp)
 
     def write(self, data):
         raise NotImplementedError()
@@ -149,6 +154,16 @@ class TestMultiTemporalImageDataset(MultiTemporalImageBase):
     def __init__(self):
         super(TestMultiTemporalImageDataset,
               self).__init__("", TestImageDataset)
+
+    def tstamps_for_daterange(self, startdate, enddate):
+        """
+        Simulate a dataset every 5 minutes
+        """
+        intervals = split_daterange_in_intervals(startdate,
+                                                 enddate,
+                                                 5)
+        startdates = [interval[0] for interval in intervals]
+        return startdates
 
 
 def test_multi_temp_dataset():
@@ -175,3 +190,25 @@ def test_multi_temp_dataset_kw_passing():
     assert type(data) == Image
     assert data.timestamp == datetime(2000, 1, 1)
     assert data.metadata == {'kw': "test"}
+
+
+def test_daily_images():
+    ds = TestMultiTemporalImageDataset()
+    count = 0
+    for data in ds.daily_images(date(2000, 1, 1)):
+        count = count + 1
+    assert count == (24 * 60) / 5
+
+
+class IntervalReadingTestDataset(IntervalReadingMixin, TestMultiTemporalImageDataset):
+    pass
+
+
+def test_interval_reading():
+    ds = IntervalReadingTestDataset()
+    count = 0
+    interval = ds.tstamps_for_daterange(datetime(2000, 1, 1),
+                                        datetime(2000, 1, 1, 0, 50))
+    data = ds.read(interval[0])
+    count = count + 1
+    assert data.lon.shape == (10,)

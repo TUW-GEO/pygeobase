@@ -37,7 +37,7 @@ dependencies:
 - zlib=1.2.8=0
 - pip:
   - coverage==4.0.3
-  - pygeogrids==0.1.5
+  - pygeogrids==0.1.7
   - pytest-cov==2.2.1
   - sphinx-rtd-theme==0.1.7
 

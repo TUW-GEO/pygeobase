@@ -1,1 +1,2 @@
 numpy
+pygeogrids>=0.1.7
