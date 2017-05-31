@@ -31,6 +31,8 @@ import glob
 import copy
 import warnings
 from datetime import datetime
+from pygeobase.utils import split_daterange_in_intervals
+from pygeobase.object_base import Image
 
 import numpy as np
 
@@ -1069,8 +1071,88 @@ class MultiTemporalImageBase(object):
         img : object
             pygeobase.object_base.Image object
         """
-        for img in self.iter_images(day, day, **kwargs):
+        start = datetime(day.year, day.month, day.day)
+        end = datetime(day.year, day.month, day.day,
+                       23, 59, 59, 999999)
+        for img in self.iter_images(start, end, **kwargs):
             yield img
 
     def resample_image(self, *args, **kwargs):
         return self.fid.resample_data(*args, **kwargs)
+
+
+class IntervalReadingMixin(object):
+    """
+    Class overwrites functions to enable reading of
+    multiple images in a time interval as one chunk.
+    E.g. reading 3 minute files in 50 minute half-orbit chunks.
+    """
+
+    def __init__(self, *args, **kwargs):
+        if 'chunk_minutes' in kwargs:
+            self.chunk_minutes = kwargs.pop('chunk_minutes')
+        else:
+            self.chunk_minutes = 50
+        super(IntervalReadingMixin, self).__init__(*args, **kwargs)
+
+    def tstamps_for_daterange(self, startdate, enddate):
+        """
+        Here we split the period between startdate and enddate into
+        intervals of size self.chunk_minutes.
+        These interval reference dates are then translated to
+        the actual file dates during reading of the chunks.
+
+        Returns
+        -------
+        intervals: list of tuples
+            list of (start, end) of intervals
+        """
+        intervals = split_daterange_in_intervals(startdate, enddate,
+                                                 self.chunk_minutes)
+        return intervals
+
+    def read(self, interval, **kwargs):
+        """
+        Return an image for a specific interval.
+
+        Parameters
+        ----------
+        interval : tuple
+            (start, end)
+
+        Returns
+        -------
+        image : object
+            pygeobase.object_base.Image object
+        """
+        start, end = interval
+        timestamps = super(IntervalReadingMixin,
+                           self).tstamps_for_daterange(start, end)
+
+        if len(timestamps) == 0:
+            return None
+
+        dataset = {}
+        metadataset = {}
+        lons = []
+        lats = []
+        for timestamp in timestamps:
+            img = super(IntervalReadingMixin, self).read(timestamp)
+
+            for key in img.data:
+                if key not in dataset:
+                    dataset[key] = []
+                dataset[key].append(img.data[key])
+
+            metadataset[timestamp] = img.metadata
+            lons.append(img.lon)
+            lats.append(img.lat)
+
+        for key in dataset:
+            dataset[key] = np.concatenate(dataset[key])
+
+        lons = np.concatenate(lons)
+        lats = np.concatenate(lats)
+
+        return Image(lons, lats, dataset, metadataset,
+                     interval[0], timekey=img.timekey)

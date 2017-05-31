@@ -148,6 +148,27 @@ Please see the :ref:`modindex` for more details.
 .. _pytesmo: https://github.com/TUW-GEO/pytesmo
 .. _pynetCF: https://github.com/TUW-GEO/pynetCF
 
+
+Working with a lot of small files
+---------------------------------
+
+Some datasets are distributed in very small files like e.g. 3 minute parts of an
+orbit. Numerous applications can be sped up if a number of these files are read
+together and concatenated before furhter processing. For this use case the
+:class:`pygeobase.io_base.IntervalReadingMixing` was developed.
+
+The class does only work if the ``tstamps_for_daterange`` method is implemented.
+If this is the case it can be used to generate a new class based on an existing
+reader class like this:
+
+.. code:: python
+
+    class IntervalReadingPickeDs(IntervalReadingMixin, PickleDs):
+        pass
+
+Please consult the working test example ``IntervalReadingTestDataset`` in
+``tests/test_io_base.py``.
+
 Contents
 ========
 

@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.3.13
+==============
+
+- Add ``IntervalReadingMixin`` for reading files in bigger chunks based on intervals.
+
 Version 0.3.12
 ==============
 
