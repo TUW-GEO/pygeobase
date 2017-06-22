@@ -546,7 +546,17 @@ class GriddedBase(object):
             gps = np.array(gp_info, dtype=np.int)[:, 0]
 
         for gp in gps:
-            yield self._read_gp(gp, **kwargs), gp
+
+            try:
+                data = self._read_gp(gp, **kwargs)
+            except IOError as e:
+                msg = "I/O error({0}): {1}, {2}".format(e.errno,
+                                                        e.strerror,
+                                                        str(gp))
+                warnings.warn(msg, RuntimeWarning)
+                data = None
+
+            yield data, gp
 
     def flush(self):
         """
