@@ -48,15 +48,15 @@ class TestDataset(object):
     def __init__(self, filename, mode='r'):
         self.filename = filename
         self.mode = mode
+        self.read = self.read_ts
 
-    def read(self, gpi, factor=1):
+    def read_ts(self, gpi, factor=1):
+        if gpi == 1234:
+            raise IOError("GPI does not exist")
         return gpi * factor
 
     def write(self, gpi, data):
         return None
-
-    def read_ts(self, gpi, factor=1):
-        return gpi * factor
 
     def write_ts(self, gpi, data):
         return None
@@ -80,6 +80,22 @@ def test_gridded_ts_base_iter_ts():
     gpi_should = [4, 3, 1, 2]
     for ts, gpi in ds.iter_ts():
         assert gpi == gpi_should.pop(0)
+
+
+def test_gridded_ts_base_iter_gp_IOError_None_yield():
+    """
+    Test iteration over time series in GriddedTsBase. Should yield None if IOError is raised.
+    """
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 1234]))
+
+    ds = GriddedTsBase("", grid, TestDataset)
+    # during iteration the gpis are traversed based on cells for a cell grid
+    gpi_should = [1234, 3, 1, 2]
+    for ts, gpi in ds.iter_gp():
+        assert gpi == gpi_should.pop(0)
+        if gpi == 1234:
+            assert ts is None
 
 
 def test_gridded_ts_base_iter_ts_kwargs():

@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Version 0.3.14
+==============
+
+- iter_gp does not longer stop if an IOError occurs in the subclass. It catches
+  the error warns the user and returns None as the dataset object.
+
 Version 0.3.13
 ==============
 
