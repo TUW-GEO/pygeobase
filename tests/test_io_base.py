@@ -147,9 +147,11 @@ def test_gridded_base_spatial_subset():
     np.testing.assert_array_equal(new_ds.grid.gpis, gpis[:2])
 
     # ll_bbox subset
+    # takes cell order into account
     ll_bbox = (0, 2, 0, 2)
     new_ds = ds.get_spatial_subset(ll_bbox=ll_bbox)
-    np.testing.assert_array_equal(new_ds.grid.gpis, gpis[:3])
+    np.testing.assert_array_equal(new_ds.grid.gpis,
+                                  np.array([2, 0, 1]))
 
     # grid subset
     new_grid = grids.CellGrid(lons[2:], lats[2:],
