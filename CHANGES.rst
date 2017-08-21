@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.3.15
+==============
+
+- Allow reading of data in append mode.
+
 Version 0.3.14
 ==============
 

@@ -55,10 +55,10 @@ class TestDataset(object):
             raise IOError("GPI does not exist")
         return gpi * factor
 
-    def write(self, gpi, data):
+    def write(self, gpi, data, **kwargs):
         return None
 
-    def write_ts(self, gpi, data):
+    def write_ts(self, gpi, data, **kwargs):
         return None
 
     def close(self):
@@ -80,6 +80,18 @@ def test_gridded_ts_base_iter_ts():
     gpi_should = [4, 3, 1, 2]
     for ts, gpi in ds.iter_ts():
         assert gpi == gpi_should.pop(0)
+
+
+def test_gridded_ts_base_read_append():
+    """
+    Test reading in append mode in GriddedTs. Should be allowed.
+    """
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+
+    ds = GriddedTsBase("", grid, TestDataset, mode='a')
+    # during iteration the gpis are traversed based on cells for a cell grid
+    assert ds.read(1) == 1
 
 
 def test_gridded_ts_base_iter_gp_IOError_None_yield():

@@ -442,7 +442,7 @@ class GriddedBase(object):
         data : numpy.ndarray
             Data set or None in case of an error.
         """
-        if self.mode in ['w', 'a']:
+        if self.mode in ['w']:
             raise IOError("File is not open in read mode")
 
         data = None
@@ -647,7 +647,7 @@ class GriddedTsBase(GriddedBase):
         data : object
             pygeobase.object_base.TS object
         """
-        if self.mode in ['w', 'a']:
+        if self.mode in ['w']:
             raise IOError("File is not open in read mode")
 
         data = None
