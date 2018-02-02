@@ -382,7 +382,6 @@ class GriddedBase(object):
                 try:
                     self.fid = self.ioclass(filename, mode=self.mode,
                                             **self.ioclass_kws)
-                    self.previous_cell = cell
                 except IOError as e:
                     success = False
                     self.fid = None
@@ -390,6 +389,9 @@ class GriddedBase(object):
                                                             e.strerror,
                                                             filename)
                     warnings.warn(msg, RuntimeWarning)
+                    self.previous_cell = None
+                else:
+                    self.previous_cell = cell
 
         if self.mode in ['w', 'a']:
             if self.previous_cell != cell:
@@ -398,7 +400,6 @@ class GriddedBase(object):
                 try:
                     self.fid = self.ioclass(filename, mode=self.mode,
                                             **self.ioclass_kws)
-                    self.previous_cell = cell
                 except IOError as e:
                     success = False
                     self.fid = None
@@ -406,6 +407,10 @@ class GriddedBase(object):
                                                             e.strerror,
                                                             filename)
                     warnings.warn(msg, RuntimeWarning)
+                    self.previous_cell = None
+                else:
+                    self.previous_cell = cell
+
         return success
 
     def _read_lonlat(self, lon, lat, **kwargs):
