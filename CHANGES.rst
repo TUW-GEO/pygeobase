@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.3.16
+==============
+
+- Fix cell switch bug
+
 Version 0.3.15
 ==============
 
