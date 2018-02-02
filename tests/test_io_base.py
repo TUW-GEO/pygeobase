@@ -1,29 +1,29 @@
-# Copyright (c) 2016, Vienna University of Technology, Department of Geodesy
-# and Geoinformation. All rights reserved.
+# Copyright (c) 2018, TU Wien, Department of Geodesy and Geoinformation
+# All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-#   * Redistributions of source code must retain the above copyright
-#     notice, this list of conditions and the following disclaimer.
-#   * Redistributions in binary form must reproduce the above copyright
-#     notice, this list of conditions and the following disclaimer in the
-#     documentation and/or other materials provided with the distribution.
-#   * Neither the name of the Vienna University of Technology, Department of
-#     Geodesy and Geoinformation nor the names of its contributors may be
-#     used to endorse or promote products derived from this software without
-#     specific prior written permission.
+#    * Redistributions of source code must retain the above copyright
+#      notice, this list of conditions and the following disclaimer.
+#    * Redistributions in binary form must reproduce the above copyright
+#      notice, this list of conditions and the following disclaimer in the
+#      documentation and/or other materials provided with the distribution.
+#    * Neither the name of TU Wien, Department of Geodesy and Geoinformation
+#      nor the names of its contributors may be used to endorse or promote
+#      products derived from this software without specific prior written
+#      permission.
 
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED. IN NO EVENT SHALL VIENNA UNIVERSITY OF TECHNOLOGY,
-# DEPARTMENT OF GEODESY AND GEOINFORMATION BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# ARE DISCLAIMED. IN NO EVENT SHALL TU WIEN, DEPARTMENT OF GEODESY AND
+# GEOINFORMATION BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+# OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+# ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import numpy as np
 from datetime import datetime, date
@@ -39,7 +39,7 @@ from pygeobase.utils import split_daterange_in_intervals
 import pygeogrids.grids as grids
 
 
-class TestDataset(object):
+class Dataset(object):
 
     """
     Test dataset that acts as a fake object for the base classes.
@@ -75,7 +75,7 @@ def test_gridded_ts_base_iter_ts():
     grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
                           np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
 
-    ds = GriddedTsBase("", grid, TestDataset)
+    ds = GriddedTsBase("", grid, Dataset)
     # during iteration the gpis are traversed based on cells for a cell grid
     gpi_should = [4, 3, 1, 2]
     for ts, gpi in ds.iter_ts():
@@ -89,19 +89,22 @@ def test_gridded_ts_base_read_append():
     grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
                           np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
 
-    ds = GriddedTsBase("", grid, TestDataset, mode='a')
+    ds = GriddedTsBase("", grid, Dataset, mode='a')
     # during iteration the gpis are traversed based on cells for a cell grid
     assert ds.read(1) == 1
 
 
 def test_gridded_ts_base_iter_gp_IOError_None_yield():
     """
-    Test iteration over time series in GriddedTsBase. Should yield None if IOError is raised.
+    Test iteration over time series in GriddedTsBase.
+    Should yield None if IOError is raised.
     """
-    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
-                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 1234]))
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]),
+                          np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]),
+                          gpis=np.array([1, 2, 3, 1234]))
 
-    ds = GriddedTsBase("", grid, TestDataset)
+    ds = GriddedTsBase("", grid, Dataset)
     # during iteration the gpis are traversed based on cells for a cell grid
     gpi_should = [1234, 3, 1, 2]
     for ts, gpi in ds.iter_gp():
@@ -117,7 +120,7 @@ def test_gridded_ts_base_iter_ts_kwargs():
     grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
                           np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
 
-    ds = GriddedTsBase("", grid, TestDataset)
+    ds = GriddedTsBase("", grid, Dataset)
     # during iteration the gpis are traversed based on cells for a cell grid
     gpi_should = [4, 3, 1, 2]
     ts_should = [4, 3, 1, 2]
@@ -136,7 +139,7 @@ def test_gridded_base_spatial_subset():
     gpis = np.arange(4)
 
     grid = grids.CellGrid(lons, lats, cells,  gpis=gpis)
-    ds = GriddedBase("", grid, TestDataset)
+    ds = GriddedBase("", grid, Dataset)
 
     # gpi subset
     new_ds = ds.get_spatial_subset(gpis=[1, 2, 3])
@@ -160,7 +163,7 @@ def test_gridded_base_spatial_subset():
     np.testing.assert_array_equal(new_ds.grid.gpis, new_grid.gpis)
 
 
-class TestImageDataset(ImageBase):
+class ImageDataset(ImageBase):
 
     def read(self, timestamp=None, additional_kw=None):
 
@@ -179,11 +182,10 @@ class TestImageDataset(ImageBase):
         pass
 
 
-class TestMultiTemporalImageDataset(MultiTemporalImageBase):
+class MultiTemporalImageDataset(MultiTemporalImageBase):
 
     def __init__(self):
-        super(TestMultiTemporalImageDataset,
-              self).__init__("", TestImageDataset)
+        super(MultiTemporalImageDataset, self).__init__("", ImageDataset)
 
     def tstamps_for_daterange(self, startdate, enddate):
         """
@@ -200,7 +202,7 @@ def test_multi_temp_dataset():
     """
     Test multi-temporal data sets.
     """
-    ds = TestMultiTemporalImageDataset()
+    ds = MultiTemporalImageDataset()
 
     data = ds.read(datetime(2000, 1, 1))
 
@@ -213,7 +215,7 @@ def test_multi_temp_dataset_kw_passing():
     """
     Test keyword pass of multi-temporal data sets.
     """
-    ds = TestMultiTemporalImageDataset()
+    ds = MultiTemporalImageDataset()
 
     data = ds.read(datetime(2000, 1, 1), additional_kw="test")
 
@@ -223,14 +225,15 @@ def test_multi_temp_dataset_kw_passing():
 
 
 def test_daily_images():
-    ds = TestMultiTemporalImageDataset()
+    ds = MultiTemporalImageDataset()
     count = 0
     for data in ds.daily_images(date(2000, 1, 1)):
         count = count + 1
     assert count == (24 * 60) / 5
 
 
-class IntervalReadingTestDataset(IntervalReadingMixin, TestMultiTemporalImageDataset):
+class IntervalReadingTestDataset(IntervalReadingMixin,
+                                 MultiTemporalImageDataset):
     pass
 
 

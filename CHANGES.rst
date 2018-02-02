@@ -6,6 +6,7 @@ Version 0.3.16
 ==============
 
 - Fix cell switch bug
+- Update copyright year
 
 Version 0.3.15
 ==============
