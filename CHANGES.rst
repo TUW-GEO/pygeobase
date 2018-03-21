@@ -2,10 +2,16 @@
 Changelog
 =========
 
+Version 0.3.XX
+==============
+
+- Update readme
+- Specify sphinx version to fix rtd
+
 Version 0.3.18
 ==============
 
-Update pyscaffold version in setup.py because of compatibility issues with setuptools 39
+- Update pyscaffold version in setup.py because of compatibility issues with setuptools 39
 
 Version 0.3.17
 ==============
