@@ -26,7 +26,6 @@ Citation
    :target: https://doi.org/10.5281/zenodo.846761
 
 If you use the software in a publication then please cite it using the Zenodo DOI.
-
 Be aware that this badge links to the latest package version.
 
 Please select your specific version at https://doi.org/10.5281/zenodo.846761 to get the DOI of that version.
