@@ -2,6 +2,16 @@
 Changelog
 =========
 
+Version 0.3.18
+==============
+
+Update pyscaffold version in setup.py because of compatibility issues with setuptools 39
+
+Version 0.3.17
+==============
+
+- Update classifier for pipy upload
+
 Version 0.3.16
 ==============
 
