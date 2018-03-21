@@ -22,10 +22,10 @@ The pygeobase package implements base class definitions for the I/O interface us
 Citation
 ========
 
-If you use the software in a publication then please cite it using the Zenodo DOI:
-
 .. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.846761.svg
    :target: https://doi.org/10.5281/zenodo.846761
+
+If you use the software in a publication then please cite it using the Zenodo DOI.
 
 Be aware that this badge links to the latest package version.
 
