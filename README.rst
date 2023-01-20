@@ -2,8 +2,11 @@
 pygeobase
 =========
 
-.. image:: https://travis-ci.org/TUW-GEO/pygeobase.svg?branch=master
-    :target: https://travis-ci.org/TUW-GEO/pygeobase
+.. image:: https://github.com/TUW-GEO/pygeobase/workflows/ubuntu/badge.svg
+   :target: https://github.com/TUW-GEO/pygeobase/actions/workflows/ubuntu.yml
+
+.. image:: https://github.com/TUW-GEO/pygeobase/workflows/windows/badge.svg
+   :target: https://github.com/TUW-GEO/pygeobase/actions/workflows/windows.yml
 
 .. image:: https://coveralls.io/repos/github/TUW-GEO/pygeobase/badge.svg?branch=master
    :target: https://coveralls.io/github/TUW-GEO/pygeobase?branch=master
