@@ -1,4 +1,4 @@
-# Copyright (c) 2018, TU Wien, Department of Geodesy and Geoinformation
+# Copyright (c) 2023, TU Wien, Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 import numpy as np
 
 
-class TS(object):
+class TS:
 
     """
     The TS class represents the base object of a time series.
@@ -58,9 +58,7 @@ class TS(object):
         self.metadata = metadata
 
     def __repr__(self):
-        return "Time series gpi:%d lat:%2.3f lon:%3.3f" % (self.gpi,
-                                                           self.lat,
-                                                           self.lon)
+        return f"Time series gpi:{self.gpi} lat:{self.lat} lon:{self.lon}"
 
     def plot(self, *args, **kwargs):
         """
@@ -72,14 +70,13 @@ class TS(object):
         ax : axes
             matplotlib axes of the plot
         """
-
         tempdata = self.data.dropna(how='all')
         ax = tempdata.plot(*args, figsize=(15, 5), **kwargs)
         ax.set_title(self.__repr__())
         return ax
 
 
-class Image(object):
+class Image:
 
     """
     The Image class represents the base object of an image.

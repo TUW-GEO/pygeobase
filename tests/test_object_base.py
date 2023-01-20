@@ -1,4 +1,4 @@
-# Copyright (c) 2018, TU Wien, Department of Geodesy and Geoinformation
+# Copyright (c) 2023, TU Wien, Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -25,26 +25,23 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pygeobase.object_base import Image
 from datetime import datetime
+
 import numpy as np
 import numpy.testing as nptest
+
+from pygeobase.object_base import Image
 
 
 def test_tuple_unpacking():
     lon = np.array([1, 2, 3])
     lat = np.array([1, 2, 3])
-    data = {'variable': np.array([1, 2, 3]),
-            'jd': np.array([5, 6, 7])}
+    data = {'variable': np.array([1, 2, 3]), 'jd': np.array([5, 6, 7])}
     metadata = {'attribute': 'test'}
     timestamp = datetime(2000, 1, 1, 12)
     img = Image(lon, lat, data, metadata, timestamp, timekey='jd')
 
-    (return_data,
-     return_metadata,
-     return_timestamp,
-     return_lon,
-     return_lat,
+    (return_data, return_metadata, return_timestamp, return_lon, return_lat,
      times) = img
 
     for key in data:
@@ -59,17 +56,12 @@ def test_tuple_unpacking():
 def test_tuple_unpacking_no_timekey():
     lon = np.array([1, 2, 3])
     lat = np.array([1, 2, 3])
-    data = {'variable': np.array([1, 2, 3]),
-            'jd': np.array([5, 6, 7])}
+    data = {'variable': np.array([1, 2, 3]), 'jd': np.array([5, 6, 7])}
     metadata = {'attribute': 'test'}
     timestamp = datetime(2000, 1, 1, 12)
     img = Image(lon, lat, data, metadata, timestamp)
 
-    (return_data,
-     return_metadata,
-     return_timestamp,
-     return_lon,
-     return_lat,
+    (return_data, return_metadata, return_timestamp, return_lon, return_lat,
      times) = img
 
     for key in data:
@@ -84,8 +76,10 @@ def test_tuple_unpacking_no_timekey():
 def test_dtype_property():
     lon = np.array([1, 2, 3], dtype=np.float32)
     lat = np.array([1, 2, 3], dtype=np.float32)
-    data = {'variable': np.array([1, 2, 3], dtype=np.int16),
-            'jd': np.array([5, 6, 7], dtype=np.float32)}
+    data = {
+        'variable': np.array([1, 2, 3], dtype=np.int16),
+        'jd': np.array([5, 6, 7], dtype=np.float32)
+    }
     metadata = {'attribute': 'test'}
     timestamp = datetime(2000, 1, 1, 12)
     img = Image(lon, lat, data, metadata, timestamp, timekey='jd')
@@ -97,8 +91,10 @@ def test_dtype_property():
 def test_getitem():
     lon = np.array([1, 2, 3], dtype=np.float32)
     lat = np.array([1, 2, 3], dtype=np.float32)
-    data = {'variable': np.array([1, 2, 3], dtype=np.int16),
-            'jd': np.array([5, 6, 7], dtype=np.float32)}
+    data = {
+        'variable': np.array([1, 2, 3], dtype=np.int16),
+        'jd': np.array([5, 6, 7], dtype=np.float32)
+    }
     metadata = {'attribute': 'test'}
     timestamp = datetime(2000, 1, 1, 12)
     img = Image(lon, lat, data, metadata, timestamp, timekey='jd')

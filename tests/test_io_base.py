@@ -1,4 +1,4 @@
-# Copyright (c) 2018, TU Wien, Department of Geodesy and Geoinformation
+# Copyright (c) 2023, TU Wien, Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -25,8 +25,12 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import warnings
+
 import numpy as np
 from datetime import datetime, date
+
+import pygeogrids.grids as grids
 
 from pygeobase.io_base import GriddedBase
 from pygeobase.io_base import GriddedTsBase
@@ -36,11 +40,8 @@ from pygeobase.io_base import IntervalReadingMixin
 from pygeobase.object_base import Image
 from pygeobase.utils import split_daterange_in_intervals
 
-import pygeogrids.grids as grids
 
-
-class Dataset(object):
-
+class Dataset:
     """
     Test dataset that acts as a fake object for the base classes.
     """
@@ -72,13 +73,15 @@ def test_gridded_ts_base_iter_ts():
     """
     Test iteration over time series in GriddedTsBase.
     """
-    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
-                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]),
+                          np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]),
+                          gpis=np.array([1, 2, 3, 4]))
 
     ds = GriddedTsBase("", grid, Dataset)
     # during iteration the gpis are traversed based on cells for a cell grid
     gpi_should = [4, 3, 1, 2]
-    for ts, gpi in ds.iter_ts():
+    for ts, gpi in ds.iter_gp():
         assert gpi == gpi_should.pop(0)
 
 
@@ -86,8 +89,10 @@ def test_gridded_ts_base_read_append():
     """
     Test reading in append mode in GriddedTs. Should be allowed.
     """
-    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
-                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]),
+                          np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]),
+                          gpis=np.array([1, 2, 3, 4]))
 
     ds = GriddedTsBase("", grid, Dataset, mode='a')
     # during iteration the gpis are traversed based on cells for a cell grid
@@ -99,32 +104,36 @@ def test_gridded_ts_base_iter_gp_IOError_None_yield():
     Test iteration over time series in GriddedTsBase.
     Should yield None if IOError is raised.
     """
-    grid = grids.CellGrid(np.array([1, 2, 3, 4]),
-                          np.array([1, 2, 3, 4]),
-                          np.array([4, 4, 2, 1]),
-                          gpis=np.array([1, 2, 3, 1234]))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        grid = grids.CellGrid(np.array([1, 2, 3, 4]),
+                            np.array([1, 2, 3, 4]),
+                            np.array([4, 4, 2, 1]),
+                            gpis=np.array([1, 2, 3, 1234]))
 
-    ds = GriddedTsBase("", grid, Dataset)
-    # during iteration the gpis are traversed based on cells for a cell grid
-    gpi_should = [1234, 3, 1, 2]
-    for ts, gpi in ds.iter_gp():
-        assert gpi == gpi_should.pop(0)
-        if gpi == 1234:
-            assert ts is None
+        ds = GriddedTsBase("", grid, Dataset)
+        # during iteration the gpis are traversed based on cells for a cell grid
+        gpi_should = [1234, 3, 1, 2]
+        for ts, gpi in ds.iter_gp():
+            assert gpi == gpi_should.pop(0)
+            if gpi == 1234:
+                assert ts is None
 
 
 def test_gridded_ts_base_iter_ts_kwargs():
     """
     Test iteration over time series in GriddedTsBase.
     """
-    grid = grids.CellGrid(np.array([1, 2, 3, 4]), np.array([1, 2, 3, 4]),
-                          np.array([4, 4, 2, 1]), gpis=np.array([1, 2, 3, 4]))
+    grid = grids.CellGrid(np.array([1, 2, 3, 4]),
+                          np.array([1, 2, 3, 4]),
+                          np.array([4, 4, 2, 1]),
+                          gpis=np.array([1, 2, 3, 4]))
 
     ds = GriddedTsBase("", grid, Dataset)
     # during iteration the gpis are traversed based on cells for a cell grid
     gpi_should = [4, 3, 1, 2]
     ts_should = [4, 3, 1, 2]
-    for ts, gpi in ds.iter_ts(factor=2):
+    for ts, gpi in ds.iter_gp(factor=2):
         assert gpi == gpi_should.pop(0)
         assert ts == ts_should.pop(0) * 2
 
@@ -138,7 +147,7 @@ def test_gridded_base_spatial_subset():
     cells = np.array([4, 4, 2, 1])
     gpis = np.arange(4)
 
-    grid = grids.CellGrid(lons, lats, cells,  gpis=gpis)
+    grid = grids.CellGrid(lons, lats, cells, gpis=gpis)
     ds = GriddedBase("", grid, Dataset)
 
     # gpi subset
@@ -153,12 +162,10 @@ def test_gridded_base_spatial_subset():
     # takes cell order into account
     ll_bbox = (0, 2, 0, 2)
     new_ds = ds.get_spatial_subset(ll_bbox=ll_bbox)
-    np.testing.assert_array_equal(new_ds.grid.gpis,
-                                  np.array([2, 0, 1]))
+    np.testing.assert_array_equal(new_ds.grid.gpis, np.array([2, 0, 1]))
 
     # grid subset
-    new_grid = grids.CellGrid(lons[2:], lats[2:],
-                              cells[2:],  gpis=gpis[2:])
+    new_grid = grids.CellGrid(lons[2:], lats[2:], cells[2:], gpis=gpis[2:])
     new_ds = ds.get_spatial_subset(grid=new_grid)
     np.testing.assert_array_equal(new_ds.grid.gpis, new_grid.gpis)
 
@@ -168,8 +175,7 @@ class ImageDataset(ImageBase):
     def read(self, timestamp=None, additional_kw=None):
 
         return Image(np.array([1]), np.array([1]),
-                     {'variable1':  np.array([1])},
-                     {'kw': additional_kw},
+                     {'variable1': np.array([1])}, {'kw': additional_kw},
                      timestamp)
 
     def write(self, data):
@@ -191,9 +197,7 @@ class MultiTemporalImageDataset(MultiTemporalImageBase):
         """
         Simulate a dataset every 5 minutes
         """
-        intervals = split_daterange_in_intervals(startdate,
-                                                 enddate,
-                                                 5)
+        intervals = split_daterange_in_intervals(startdate, enddate, 5)
         startdates = [interval[0] for interval in intervals]
         return startdates
 
@@ -244,4 +248,4 @@ def test_interval_reading():
                                         datetime(2000, 1, 1, 0, 50))
     data = ds.read(interval[0])
     count = count + 1
-    assert data.lon.shape == (10,)
+    assert data.lon.shape == (10, )

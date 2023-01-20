@@ -1,4 +1,4 @@
-# Copyright (c) 2018, TU Wien, Department of Geodesy and Geoinformation
+# Copyright (c) 2023, TU Wien, Department of Geodesy and Geoinformation
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -31,14 +31,14 @@ import glob
 import copy
 import warnings
 from datetime import datetime
-from pygeobase.utils import split_daterange_in_intervals
-from pygeobase.object_base import Image
 
 import numpy as np
 
+from pygeobase.utils import split_daterange_in_intervals
+from pygeobase.object_base import Image
 
-class StaticBase(object):
 
+class StaticBase:
     """
     The StaticBase class serves as a template for i/o objects used in
     GriddedStaticBase.
@@ -104,8 +104,7 @@ class StaticBase(object):
         return
 
 
-class TsBase(object):
-
+class TsBase:
     """
     The TsBase class serves as a template for i/o objects used in
     GriddedTsBase.
@@ -171,8 +170,7 @@ class TsBase(object):
         return
 
 
-class ImageBase(object):
-
+class ImageBase:
     """
     ImageBase class serves as a template for i/o objects used for reading
     and writing image data.
@@ -183,7 +181,6 @@ class ImageBase(object):
         Filename path.
     mode : str, optional
         Opening mode. Default: r
-
     """
     __metaclass__ = abc.ABCMeta
 
@@ -259,8 +256,8 @@ class ImageBase(object):
 
         target = {}
         for name in image.dtype.names:
-            target[name] = np.nansum(
-                image[name][index] * weights, axis=1) / total_weights
+            target[name] = np.nansum(image[name][index] * weights,
+                                     axis=1) / total_weights
 
         return target
 
@@ -291,8 +288,7 @@ class ImageBase(object):
         return
 
 
-class GriddedBase(object):
-
+class GriddedBase:
     """
     The GriddedBase class uses another IO class together with a grid
     object to read/write a dataset under the given path.
@@ -315,7 +311,12 @@ class GriddedBase(object):
 
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, path, grid, ioclass, mode='r', fn_format='{:04d}',
+    def __init__(self,
+                 path,
+                 grid,
+                 ioclass,
+                 mode='r',
+                 fn_format='{:04d}',
                  ioclass_kws=None):
 
         self.path = path
@@ -380,14 +381,14 @@ class GriddedBase(object):
                 self.close()
 
                 try:
-                    self.fid = self.ioclass(filename, mode=self.mode,
+                    self.fid = self.ioclass(filename,
+                                            mode=self.mode,
                                             **self.ioclass_kws)
                 except IOError as e:
                     success = False
                     self.fid = None
-                    msg = "I/O error({0}): {1}, {2}".format(e.errno,
-                                                            e.strerror,
-                                                            filename)
+                    msg = "I/O error({0}): {1}, {2}".format(
+                        e.errno, e.strerror, filename)
                     warnings.warn(msg, RuntimeWarning)
                     self.previous_cell = None
                 else:
@@ -398,14 +399,14 @@ class GriddedBase(object):
                 self.flush()
                 self.close()
                 try:
-                    self.fid = self.ioclass(filename, mode=self.mode,
+                    self.fid = self.ioclass(filename,
+                                            mode=self.mode,
                                             **self.ioclass_kws)
                 except IOError as e:
                     success = False
                     self.fid = None
-                    msg = "I/O error({0}): {1}, {2}".format(e.errno,
-                                                            e.strerror,
-                                                            filename)
+                    msg = "I/O error({0}): {1}, {2}".format(
+                        e.errno, e.strerror, filename)
                     warnings.warn(msg, RuntimeWarning)
                     self.previous_cell = None
                 else:
@@ -538,26 +539,25 @@ class GriddedBase(object):
         """
         if 'll_bbox' in kwargs:
             latmin, latmax, lonmin, lonmax = kwargs['ll_bbox']
-            gps = self.grid.get_bbox_grid_points(latmin, latmax,
-                                                 lonmin, lonmax)
+            gps = self.grid.get_bbox_grid_points(latmin, latmax, lonmin,
+                                                 lonmax)
             kwargs.pop('ll_bbox', None)
         elif 'gpis' in kwargs:
             subgrid = self.grid.subgrid_from_gpis(kwargs['gpis'])
             gp_info = list(subgrid.grid_points())
-            gps = np.array(gp_info, dtype=np.int)[:, 0]
+            gps = np.array(gp_info, dtype=np.int32)[:, 0]
             kwargs.pop('gpis', None)
         else:
             gp_info = list(self.grid.grid_points())
-            gps = np.array(gp_info, dtype=np.int)[:, 0]
+            gps = np.array(gp_info, dtype=np.int32)[:, 0]
 
         for gp in gps:
 
             try:
                 data = self._read_gp(gp, **kwargs)
             except IOError as e:
-                msg = "I/O error({0}): {1}, {2}".format(e.errno,
-                                                        e.strerror,
-                                                        str(gp))
+                msg = "I/O error({0}): {1}, {2}".format(
+                    e.errno, e.strerror, str(gp))
                 warnings.warn(msg, RuntimeWarning)
                 data = None
 
@@ -578,7 +578,10 @@ class GriddedBase(object):
             self.fid.close()
             self.fid = None
 
-    def get_spatial_subset(self, gpis=None, cells=None, ll_bbox=None,
+    def get_spatial_subset(self,
+                           gpis=None,
+                           cells=None,
+                           ll_bbox=None,
                            grid=None):
         """
         Select spatial subset and return data set with new grid.
@@ -607,8 +610,8 @@ class GriddedBase(object):
 
         if ll_bbox:
             latmin, latmax, lonmin, lonmax = ll_bbox
-            gps = self.grid.get_bbox_grid_points(latmin, latmax,
-                                                 lonmin, lonmax)
+            gps = self.grid.get_bbox_grid_points(latmin, latmax, lonmin,
+                                                 lonmax)
             new_grid = self.grid.subgrid_from_gpis(gps)
 
         if grid:
@@ -620,19 +623,7 @@ class GriddedBase(object):
         return dataset
 
 
-class GriddedStaticBase(GriddedBase):
-
-    """
-    The GriddedStaticBase class uses another IO class together with a grid
-    object to read/write a dataset under the given path.
-    """
-
-    warnings.warn("GriddedStaticBase is deprecated,"
-                  " please use GriddedBase instead.", DeprecationWarning)
-
-
 class GriddedTsBase(GriddedBase):
-
     """
     The GriddedTsBase class uses another IO class together with a grid object
     to read/write a time series dataset under the given path.
@@ -680,44 +671,8 @@ class GriddedTsBase(GriddedBase):
             lon, lat = self.grid.gpi2lonlat(gp)
             self.fid.write_ts(gp, data, lon=lon, lat=lat, **kwargs)
 
-    def read_ts(self, *args, **kwargs):
-        """
-        Takes either 1 or 2 arguments and calls the correct function
-        which is either reading the gpi directly or finding
-        the nearest gpi from given lat,lon coordinates and then reading it
-        """
-        warnings.warn("read_ts is deprecated, please use read "
-                      "instead.", DeprecationWarning)
-        return self.read(*args, **kwargs)
 
-    def write_ts(self, *args, **kwargs):
-        """
-        Takes either 1, 2 or 3 arguments (the last one always needs to be the
-        data to be written) and calls the correct function which is either
-        writing the gp directly or finding the nearest gp from given
-        lon, lat coordinates and then reading it.
-        """
-        warnings.warn("write_ts is deprecated, please use write "
-                      "instead.", DeprecationWarning)
-        return self.write(*args, **kwargs)
-
-    def iter_ts(self, **kwargs):
-        """
-        Yield time series for all grid points.
-        Yields
-        ------
-        data : object
-            pygeobase.object_base.TS object
-        gp : int
-            Grid point.
-        """
-        warnings.warn("iter_ts is deprecated, please use iter_gp "
-                      "instead.", DeprecationWarning)
-        return self.iter_gp(**kwargs)
-
-
-class MultiTemporalImageBase(object):
-
+class MultiTemporalImageBase:
     """
     The MultiTemporalImageBase class make use of an ImageBase object to
     read/write a sequence of multi temporal images under a given path.
@@ -755,9 +710,16 @@ class MultiTemporalImageBase(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, path, ioclass, mode='r', fname_templ="",
-                 datetime_format="", subpath_templ=None, ioclass_kws=None,
-                 exact_templ=True, dtime_placeholder="datetime"):
+    def __init__(self,
+                 path,
+                 ioclass,
+                 mode='r',
+                 fname_templ="",
+                 datetime_format="",
+                 subpath_templ=None,
+                 ioclass_kws=None,
+                 exact_templ=True,
+                 dtime_placeholder="datetime"):
 
         self.path = path
         self.ioclass = ioclass
@@ -833,7 +795,8 @@ class MultiTemporalImageBase(object):
         self.close()
 
         try:
-            self.fid = self.ioclass(filepath, mode=self.mode,
+            self.fid = self.ioclass(filepath,
+                                    mode=self.mode,
                                     **self.ioclass_kws)
         except IOError as e:
             self.fid = None
@@ -843,7 +806,10 @@ class MultiTemporalImageBase(object):
 
         return success
 
-    def _search_files(self, timestamp, custom_templ=None, str_param=None,
+    def _search_files(self,
+                      timestamp,
+                      custom_templ=None,
+                      str_param=None,
                       custom_datetime_format=None):
         """
         searches for filenames with the given timestamp. This function is
@@ -907,8 +873,7 @@ class MultiTemporalImageBase(object):
 
         return filename
 
-    def _build_filename(self, timestamp, custom_templ=None,
-                        str_param=None):
+    def _build_filename(self, timestamp, custom_templ=None, str_param=None):
         """
         This function uses _search_files to find the correct
         filename and checks if the search was unambiguous
@@ -932,13 +897,13 @@ class MultiTemporalImageBase(object):
             >>> 'Coordinates: {latitude}, {longitude}'.format(**coord)
             'Coordinates: 37.24N, -115.81W'
         """
-        filename = self._search_files(timestamp, custom_templ=custom_templ,
+        filename = self._search_files(timestamp,
+                                      custom_templ=custom_templ,
                                       str_param=str_param)
         if len(filename) == 0:
             raise IOError("No file found for {:}".format(timestamp.ctime()))
         if len(filename) > 1:
-            raise IOError(
-                "File search is ambiguous {:}".format(filename))
+            raise IOError("File search is ambiguous {:}".format(filename))
 
         return filename[0]
 
@@ -1091,8 +1056,7 @@ class MultiTemporalImageBase(object):
             pygeobase.object_base.Image object
         """
         start = datetime(day.year, day.month, day.day)
-        end = datetime(day.year, day.month, day.day,
-                       23, 59, 59, 999999)
+        end = datetime(day.year, day.month, day.day, 23, 59, 59, 999999)
         for img in self.iter_images(start, end, **kwargs):
             yield img
 
@@ -1100,8 +1064,7 @@ class MultiTemporalImageBase(object):
         return self.fid.resample_data(*args, **kwargs)
 
 
-class IntervalReadingMixin(object):
-
+class IntervalReadingMixin:
     """
     Class overwrites functions to enable reading of
     multiple images in a time interval as one chunk.
@@ -1174,5 +1137,9 @@ class IntervalReadingMixin(object):
         lons = np.concatenate(lons)
         lats = np.concatenate(lats)
 
-        return Image(lons, lats, dataset, metadataset,
-                     interval[0], timekey=img.timekey)
+        return Image(lons,
+                     lats,
+                     dataset,
+                     metadataset,
+                     interval[0],
+                     timekey=img.timekey)
