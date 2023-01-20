@@ -2,8 +2,15 @@
 Changelog
 =========
 
+Version 0.5.0
+=============
+
+- Use github actions for CI
+- Remove deprecated classes and methods
+- Update copyright year
+
 Version 0.4.0
-==============
+=============
 
 - Update readme
 - Specify sphinx version to fix rtd
