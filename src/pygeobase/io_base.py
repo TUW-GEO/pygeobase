@@ -649,7 +649,7 @@ class GriddedTsBase(GriddedBase):
         data = None
 
         if self._open(gp):
-            data = self.fid.read_ts(gp, **kwargs)
+            data = self.fid.read(gp, **kwargs)
 
         return data
 
