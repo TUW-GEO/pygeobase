@@ -2,6 +2,11 @@
 Changelog
 =========
 
+Version 0.6.0
+=============
+
+- Replace read_ts with read in time series base class
+
 Version 0.5.0
 =============
 

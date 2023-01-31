@@ -34,11 +34,11 @@ def split_daterange_in_intervals(start, end, mi):
 
     Parameters
     ----------
-    start: datetime.datetime
+    start : datetime.datetime
         start of the daterange
-    end: datetime.datetime
+    end : datetime.datetime
         end of the daterange
-    mi: int
+    mi : int
         Minutes of the intervals
 
     Returns

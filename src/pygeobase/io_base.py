@@ -127,7 +127,7 @@ class TsBase:
         self.kwargs = kwargs
 
     @abc.abstractmethod
-    def read_ts(self, gpi, **kwargs):
+    def read(self, gpi, **kwargs):
         """
         Read time series data for given grid point.
 
@@ -144,7 +144,7 @@ class TsBase:
         return
 
     @abc.abstractmethod
-    def write_ts(self, gpi, data, **kwargs):
+    def write(self, gpi, data, **kwargs):
         """
         Write data.
 
@@ -649,7 +649,7 @@ class GriddedTsBase(GriddedBase):
         data = None
 
         if self._open(gp):
-            data = self.fid.read_ts(gp, **kwargs)
+            data = self.fid.read(gp, **kwargs)
 
         return data
 
@@ -669,7 +669,7 @@ class GriddedTsBase(GriddedBase):
 
         if self._open(gp):
             lon, lat = self.grid.gpi2lonlat(gp)
-            self.fid.write_ts(gp, data, lon=lon, lat=lat, **kwargs)
+            self.fid.write(gp, data, lon=lon, lat=lat, **kwargs)
 
 
 class MultiTemporalImageBase:
