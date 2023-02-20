@@ -2,6 +2,16 @@
 Changelog
 =========
 
+Unreleased changes in master
+============================
+
+-
+
+Version 0.6.1
+=============
+
+- Replace read_ts with read call from io class (see https://github.com/TUW-GEO/pygeobase/pull/46)
+
 Version 0.6.0
 =============
 
