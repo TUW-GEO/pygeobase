@@ -387,8 +387,7 @@ class GriddedBase:
                 except IOError as e:
                     success = False
                     self.fid = None
-                    msg = "I/O error({0}): {1}, {2}".format(
-                        e.errno, e.strerror, filename)
+                    msg = f"I/O error({e.errno}): {e.strerror}, {filename}"
                     warnings.warn(msg, RuntimeWarning)
                     self.previous_cell = None
                 else:
@@ -405,8 +404,7 @@ class GriddedBase:
                 except IOError as e:
                     success = False
                     self.fid = None
-                    msg = "I/O error({0}): {1}, {2}".format(
-                        e.errno, e.strerror, filename)
+                    msg = f"I/O error({e.errno}): {e.strerror}, {filename}"
                     warnings.warn(msg, RuntimeWarning)
                     self.previous_cell = None
                 else:
@@ -430,7 +428,8 @@ class GriddedBase:
         data : dict of values
             data record.
         """
-        gp, _ = self.grid.find_nearest_gpi(lon, lat)
+        max_dist = kwargs.pop("max_dist", np.Inf)
+        gp, _ = self.grid.find_nearest_gpi(lon, lat, max_dist)
 
         return self._read_gp(gp, **kwargs)
 
@@ -556,8 +555,7 @@ class GriddedBase:
             try:
                 data = self._read_gp(gp, **kwargs)
             except IOError as e:
-                msg = "I/O error({0}): {1}, {2}".format(
-                    e.errno, e.strerror, str(gp))
+                msg = f"I/O error({e.errno}): {e.strerror}, {gp}"
                 warnings.warn(msg, RuntimeWarning)
                 data = None
 
@@ -801,8 +799,7 @@ class MultiTemporalImageBase:
         except IOError as e:
             self.fid = None
             success = False
-            warnings.warn("I/O error({0}): {1}".format(e.errno, e.strerror),
-                          RuntimeWarning)
+            warnings.warn(f"I/O error({e.errno}): {e.strerror}", RuntimeWarning)
 
         return success
 
@@ -901,9 +898,9 @@ class MultiTemporalImageBase:
                                       custom_templ=custom_templ,
                                       str_param=str_param)
         if len(filename) == 0:
-            raise IOError("No file found for {:}".format(timestamp.ctime()))
+            raise IOError(f"No file found for {timestamp.ctime()}")
         if len(filename) > 1:
-            raise IOError("File search is ambiguous {:}".format(filename))
+            raise IOError(f"File search is ambiguous {filename}")
 
         return filename[0]
 

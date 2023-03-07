@@ -7,6 +7,11 @@ Unreleased changes in master
 
 -
 
+Version 0.6.2
+=============
+
+- Extract max_dist keyword from kwargs in read_lon_lat and pass on to pygeogrids nearest neighbor search
+
 Version 0.6.1
 =============
 
