@@ -15,7 +15,8 @@ pygeobase
     :target: https://badge.fury.io/py/pygeobase
 
 .. image:: https://readthedocs.org/projects/pygeobase/badge/?version=latest
-   :target: http://pygeobase.readthedocs.org/en/latest/?badge=latest
+    :alt: ReadTheDocs
+    :target: https://pygeobase.readthedocs.io/en/stable/
 
 The pygeobase package implements base class definitions for the I/O interface used in pytesmo_, pynetCF_, and other packages.
 
@@ -109,8 +110,11 @@ If you want to contribute please follow these steps:
   We use py.test so a simple function called test_my_feature is enough
 - submit a pull request to our master branch
 
+
+.. _pyscaffold-notes:
+
 Note
 ====
 
-This project has been set up using PyScaffold 3.2.3. For details and usage
+This project has been set up using PyScaffold 4.5. For details and usage
 information on PyScaffold see https://pyscaffold.org/.
