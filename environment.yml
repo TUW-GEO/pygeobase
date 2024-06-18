@@ -1,4 +1,6 @@
 name: pygeobase_env
+channels:
+  - conda-forge
 dependencies:
 - hdf5
 - numpy
