@@ -428,7 +428,7 @@ class GriddedBase:
         data : dict of values
             data record.
         """
-        max_dist = kwargs.pop("max_dist", np.Inf)
+        max_dist = kwargs.pop("max_dist", np.inf)
         gp, _ = self.grid.find_nearest_gpi(lon, lat, max_dist)
 
         return self._read_gp(gp, **kwargs)

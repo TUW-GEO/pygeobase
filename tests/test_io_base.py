@@ -97,6 +97,7 @@ def test_gridded_ts_base_read_append():
     ds = GriddedTsBase("", grid, Dataset, mode='a')
     # during iteration the gpis are traversed based on cells for a cell grid
     assert ds.read(1) == 1
+    assert ds.read(1, 1) == 1
 
 
 def test_gridded_ts_base_iter_gp_IOError_None_yield():
