@@ -1,4 +1,6 @@
 name: pygeobase_env
+channels:
+  - conda-forge
 dependencies:
 - hdf5
 - numpy
@@ -6,6 +8,6 @@ dependencies:
 - pykdtree
 - pip
 - pip:
-  - pygeogrids
+  - pygeogrids>=0.5.1
   - pytest
   - pytest-cov
