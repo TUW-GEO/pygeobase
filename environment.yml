@@ -6,6 +6,6 @@ dependencies:
 - pykdtree
 - pip
 - pip:
-  - pygeogrids
+  - pygeogrids>=0.5.1
   - pytest
   - pytest-cov
